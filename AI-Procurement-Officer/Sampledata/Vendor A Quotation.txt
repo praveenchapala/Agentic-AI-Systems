@@ -1,0 +1,18 @@
+Vendor Name: TechSupply Pvt Ltd
+
+Product: Dell Latitude 5440
+
+Quantity: 100
+
+Price Per Unit: ₹52,000
+
+Total Cost: ₹52,00,000
+
+Warranty: 3 Years
+
+Delivery: 30 Days
+
+Support: Business Hours Support
+
+Contract Notes:
+No penalty clause for delivery delays.

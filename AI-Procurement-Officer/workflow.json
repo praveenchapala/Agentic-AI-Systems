@@ -1,0 +1,631 @@
+{
+  "name": "AI Procurement Officer",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "AI Procurement Officer",
+        "formDescription": "Upload vendor quotations and procurement requirements. The AI Procurement Officer will analyze pricing, delivery timelines, risks, contract terms, and recommend the best vendor.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Procurement Request"
+            },
+            {
+              "fieldLabel": "Budget",
+              "fieldType": "number"
+            },
+            {
+              "fieldLabel": "Required Delivery Time",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "7 Days"
+                  },
+                  {
+                    "option": "15 Days"
+                  },
+                  {
+                    "option": "30 Days"
+                  },
+                  {
+                    "option": "45 Days"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Vendor A Quote",
+              "fieldType": "file"
+            },
+            {
+              "fieldLabel": "Vendor B Quote",
+              "fieldType": "file"
+            },
+            {
+              "fieldLabel": "Vendor C Quote",
+              "fieldType": "file"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        -592,
+        -32
+      ],
+      "id": "237b4402-85d7-4224-8d7d-00ef8ac83180",
+      "name": "On form submission",
+      "webhookId": "fdbd7949-fe31-4348-ba4b-b47c32b59756"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "binaryPropertyName": "Vendor_A_Quote",
+        "destinationKey": "json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -432,
+        -128
+      ],
+      "id": "d11c2d3e-2bfc-4048-b1c9-aa8d950a90e2",
+      "name": "Extract Vendor A"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "binaryPropertyName": "Vendor_B_Quote",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -432,
+        16
+      ],
+      "id": "e9b4d58e-d4f2-4ed2-a350-ab2dfafbbcc2",
+      "name": "Extract Vendor B"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "binaryPropertyName": "Vendor_C_Quote",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -240,
+        -48
+      ],
+      "id": "c0ed74cc-15a5-48d3-b714-2d0c40e10aba",
+      "name": "Extract Vendor C"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Procurement Analyst.\n\nProcurement Request:\n{{ $('On form submission').item.json[\"Procurement Request\"] }}\n\nVendor Quotations:\n\n{{ JSON.stringify($input.all()) }}\n\nCompare all vendors on:\n\n1. Cost\n2. Warranty\n3. Delivery Time\n4. Support\n5. Contract Risk\n\nGive scores out of 10.\n\nReturn:\n- vendor_a_score\n- vendor_b_score\n- vendor_c_score\n- best_vendor\n- cost_analysis\n- delivery_analysis\n- support_analysis\n- contract_risk_analysis\n- overall_ranking\n- recommendation",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -432,
+        208
+      ],
+      "id": "ba96290e-d2d8-4861-8a05-4dfd23e3e852",
+      "name": "Vendor Comparison Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        416
+      ],
+      "id": "d107fdf7-d8f2-4016-aad2-b19a2da2d38c",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"vendor_a_score\": \"string\",\n  \"vendor_b_score\": \"string\",\n  \"vendor_c_score\": \"string\",\n  \"best_vendor\": \"string\",\n  \"cost_analysis\": \"string\",\n  \"delivery_analysis\": \"string\",\n  \"support_analysis\": \"string\",\n  \"contract_risk_analysis\": \"string\",\n  \"overall_ranking\": \"string\",\n  \"recommendation\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -368,
+        416
+      ],
+      "id": "140639be-2534-427e-b9f1-ff36dc617352",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Procurement Risk Officer.\n\nVendor Comparison Results:\n\n{{ JSON.stringify($json) }}\n\nAnalyze:\n\n1. Financial Risk\n2. Delivery Risk\n3. Contract Risk\n4. Support Risk\n5. Vendor Dependency Risk\n\nAssign:\nLow / Medium / High\n\nSuggest mitigation strategies.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -144,
+        208
+      ],
+      "id": "61fdc301-4e7e-48e8-b944-5cffe41d330c",
+      "name": "Risk Assessment Agent"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"financial_risk\":\"string\",\n  \"delivery_risk\":\"string\",\n  \"contract_risk\":\"string\",\n  \"support_risk\":\"string\",\n  \"vendor_dependency_risk\":\"string\",\n  \"overall_risk_score\":\"string\",\n  \"mitigation_plan\":\"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -80,
+        416
+      ],
+      "id": "7c6324b2-b5e5-417f-81c8-dd28a9e00eef",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -224,
+        416
+      ],
+      "id": "a88c1bc5-8f58-4368-93b3-6a0610b607e9",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Procurement Contract Analyst.\n\nVendor Recommendation:\n{{ JSON.stringify($('Vendor Comparison Agent').item.json.output) }}\n\nRisk Assessment:\n{{ JSON.stringify($json.output) }}\n\nReview the procurement contract conditions.\n\nAnalyze:\n\n1. Warranty Terms\n2. Delivery Penalty Clauses\n3. Auto Renewal Clauses\n4. Payment Terms\n5. Vendor Lock-in Risks\n6. SLA Commitments\n\nIdentify:\n\n- High Risk Clauses\n- Missing Clauses\n- Negotiation Opportunities\n\nProvide recommendations before signing.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -32,
+        -32
+      ],
+      "id": "7b88ccf5-689a-4d1d-83c3-24fc46312ab5",
+      "name": "Contract Review Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        112,
+        160
+      ],
+      "id": "d228339f-60ab-433c-b52f-85d957964a47",
+      "name": "Groq Chat Model2",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"warranty_review\": \"string\",\n  \"penalty_clause_review\": \"string\",\n  \"payment_terms_review\": \"string\",\n  \"sla_review\": \"string\",\n  \"vendor_lockin_risk\": \"string\",\n  \"negotiation_points\": \"string\",\n  \"contract_approval_status\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        144
+      ],
+      "id": "747f23aa-138a-4be7-9954-b51085412dc6",
+      "name": "Structured Output Parser2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Chief Procurement Officer.\n\nVendor Analysis:\n{{ JSON.stringify($('Vendor Comparison Agent').item.json.output) }}\n\nRisk Assessment:\n{{ JSON.stringify($('Risk Assessment Agent').item.json.output) }}\n\nContract Review:\n{{ JSON.stringify($json.output) }}\n\nMake the final procurement decision.\n\nProvide:\n\n1. Approved Vendor\n2. Business Justification\n3. Expected Savings\n4. Key Risks\n5. Procurement Decision",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        256,
+        -32
+      ],
+      "id": "e369f3ea-fcce-4e45-b59f-8f344fffb965",
+      "name": "Recommendation Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        336,
+        144
+      ],
+      "id": "e88afe56-baa8-41d8-aaa4-902b55b1df7c",
+      "name": "Groq Chat Model3",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"approved_vendor\": \"string\",\n  \"decision\": \"string\",\n  \"business_justification\": \"string\",\n  \"expected_savings\": \"string\",\n  \"key_risks\": \"string\",\n  \"executive_summary\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        448,
+        144
+      ],
+      "id": "473a8dc2-1b92-4e86-be17-f867f21f038f",
+      "name": "Structured Output Parser3"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Chief Procurement Officer.\n\nVendor Analysis:\n{{ JSON.stringify($('Vendor Comparison Agent').item.json.output) }}\n\nRisk Assessment:\n{{ JSON.stringify($('Risk Assessment Agent').item.json.output) }}\n\nContract Review:\n{{ JSON.stringify($('Contract Review Agent').item.json.output) }}\n\nFinal Recommendation:\n{{ JSON.stringify($('Recommendation Agent').item.json.output) }}\n\nGenerate an executive procurement report.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        592,
+        -32
+      ],
+      "id": "b2191c12-667a-4a7a-9aca-f90a61086a95",
+      "name": "Executive Report Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        592,
+        160
+      ],
+      "id": "2e246096-d4c5-44ff-9236-66c5d652c90e",
+      "name": "Groq Chat Model4",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"executive_summary\":\"string\",\n  \"selected_vendor\":\"string\",\n  \"business_value\":\"string\",\n  \"cost_savings\":\"string\",\n  \"risk_summary\":\"string\",\n  \"approval_status\":\"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        720,
+        160
+      ],
+      "id": "3def6bcf-56e0-40a7-aba3-fe931657cf65",
+      "name": "Structured Output Parser4"
+    },
+    {
+      "parameters": {
+        "html": "<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n<title>AI Procurement Officer Report</title>\n\n<style>\nbody{\nfont-family:Arial,sans-serif;\nbackground:#f4f6f9;\npadding:30px;\ncolor:#333;\n}\n\n.container{\nmax-width:1000px;\nmargin:auto;\nbackground:white;\npadding:30px;\nborder-radius:12px;\nbox-shadow:0 2px 10px rgba(0,0,0,0.1);\n}\n\n.header{\nbackground:#1f2937;\ncolor:white;\npadding:20px;\nborder-radius:10px;\n}\n\n.section{\nmargin-top:25px;\npadding:15px;\nbackground:#f9fafb;\nborder-left:5px solid #2563eb;\nborder-radius:5px;\n}\n\n.section h2{\nmargin-top:0;\ncolor:#2563eb;\n}\n\n.status{\ndisplay:inline-block;\npadding:8px 15px;\nborder-radius:20px;\nbackground:#16a34a;\ncolor:white;\nfont-weight:bold;\n}\n\n.footer{\nmargin-top:30px;\ntext-align:center;\ncolor:#666;\nfont-size:12px;\n}\n</style>\n\n</head>\n\n<body>\n\n<div class=\"container\">\n\n<div class=\"header\">\n<h1>AI Procurement Officer Report</h1>\n<p>Automated Procurement Decision Analysis</p>\n</div>\n\n<div class=\"section\">\n<h2>Executive Summary</h2>\n<p>{{ $json.output.executive_summary }}</p>\n</div>\n\n<div class=\"section\">\n<h2>Selected Vendor</h2>\n<p><strong>{{ $json.output.selected_vendor }}</strong></p>\n</div>\n\n<div class=\"section\">\n<h2>Business Value</h2>\n<p>{{ $json.output.business_value }}</p>\n</div>\n\n<div class=\"section\">\n<h2>Cost Savings</h2>\n<p>{{ $json.output.cost_savings }}</p>\n</div>\n\n<div class=\"section\">\n<h2>Risk Summary</h2>\n<p>{{ $json.output.risk_summary }}</p>\n</div>\n\n<div class=\"section\">\n<h2>Approval Status</h2>\n<span class=\"status\">\n{{ $json.output.approval_status }}\n</span>\n</div>\n\n<div class=\"section\">\n<h2>Vendor Comparison Summary</h2>\n\n<p><strong>Best Vendor:</strong>\n{{ $('Vendor Comparison Agent').item.json.output.best_vendor }}\n</p>\n\n<p><strong>Ranking:</strong>\n{{ $('Vendor Comparison Agent').item.json.output.overall_ranking }}\n</p>\n\n<p><strong>Recommendation:</strong>\n{{ $('Vendor Comparison Agent').item.json.output.recommendation }}\n</p>\n\n</div>\n\n<div class=\"section\">\n<h2>Risk Assessment</h2>\n\n<p><strong>Financial Risk:</strong>\n{{ $('Risk Assessment Agent').item.json.output.financial_risk }}\n</p>\n\n<p><strong>Delivery Risk:</strong>\n{{ $('Risk Assessment Agent').item.json.output.delivery_risk }}\n</p>\n\n<p><strong>Contract Risk:</strong>\n{{ $('Risk Assessment Agent').item.json.output.contract_risk }}\n</p>\n\n<p><strong>Overall Risk:</strong>\n{{ $('Risk Assessment Agent').item.json.output.overall_risk_score }}\n</p>\n\n</div>\n\n<div class=\"section\">\n<h2>Final Procurement Decision</h2>\n\n<p>\nThis procurement request has been evaluated through\nVendor Analysis, Risk Assessment, Contract Review,\nand Executive Recommendation Agents.\n</p>\n\n<p>\nThe recommended supplier is\n<strong>{{ $json.output.selected_vendor }}</strong>.\n</p>\n\n</div>\n\n<div class=\"footer\">\nGenerated Automatically by AI Procurement Officer\n</div>\n\n</div>\n\n</body>\n</html>"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        272,
+        304
+      ],
+      "id": "58b7eff7-bdc8-4604-9dfb-af5719d33709",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "sendTo": "praveenpraveensimhadri@gmail.com ",
+        "subject": "=AI Procurement Report | Recommended Vendor: {{ $('Executive Report Agent').item.json.output.selected_vendor }}",
+        "message": "=<!DOCTYPE html>\n\n<html>\n<head>\n<meta charset=\"UTF-8\">\n<title>AI Procurement Report</title>\n<style>\nbody{\n    margin:0;\n    padding:20px;\n    background:#f4f6f9;\n    font-family:Arial, Helvetica, sans-serif;\n}\n\n.container{\nmax-width:900px;\nmargin:auto;\nbackground:#ffffff;\nborder-radius:12px;\noverflow:hidden;\nbox-shadow:0 4px 20px rgba(0,0,0,0.1);\n}\n\n.header{\nbackground:#0f172a;\ncolor:white;\npadding:30px;\n}\n\n.header h1{\nmargin:0;\nfont-size:28px;\n}\n\n.header p{\nmargin-top:8px;\ncolor:#cbd5e1;\n}\n\n.section{\npadding:25px 30px;\nborder-bottom:1px solid #e5e7eb;\n}\n\n.section h2{\ncolor:#2563eb;\nmargin-bottom:15px;\n}\n\n.summary{\nbackground:#f8fafc;\npadding:20px;\nborder-radius:8px;\nline-height:1.8;\n}\n\ntable{\nwidth:100%;\nborder-collapse:collapse;\nmargin-top:15px;\n}\n\ntable th{\nbackground:#2563eb;\ncolor:white;\npadding:12px;\ntext-align:left;\n}\n\ntable td{\npadding:12px;\nborder:1px solid #e5e7eb;\n}\n\n.risk-box{\nbackground:#fef3c7;\nborder-left:5px solid #f59e0b;\npadding:15px;\nborder-radius:6px;\n}\n\n.recommendation{\nbackground:#dcfce7;\nborder-left:6px solid #16a34a;\npadding:20px;\nborder-radius:8px;\n}\n\n.score{\ndisplay:inline-block;\nbackground:#16a34a;\ncolor:white;\npadding:8px 15px;\nborder-radius:20px;\nfont-weight:bold;\n}\n\n.footer{\ntext-align:center;\npadding:25px;\ncolor:#64748b;\nbackground:#f8fafc;\n}\n\n.highlight{\ncolor:#16a34a;\nfont-weight:bold;\n} </style>\n\n</head>\n\n<body>\n\n<div class=\"container\">\n\n<div class=\"header\">\n<h1>AI Procurement Analysis Report</h1>\n<p>Generated by AI Procurement Officer Agentic System</p>\n</div>\n\n<div class=\"section\">\n<h2>📋 Procurement Request Summary</h2>\n\n<div class=\"summary\">\n<strong>Item:</strong> Dell Latitude 5440 Laptops<br>\n<strong>Quantity:</strong> 100 Units<br>\n<strong>Budget:</strong> ₹50,00,000<br>\n<strong>Required Delivery Timeline:</strong> 30 Days\n</div>\n</div>\n\n<div class=\"section\">\n<h2>🏢 Vendor Evaluation Summary</h2>\n\n<table>\n<tr>\n<th>Vendor</th>\n<th>Total Cost</th>\n<th>Warranty</th>\n<th>Delivery</th>\n<th>Support</th>\n<th>Risk</th>\n</tr>\n\n<tr>\n<td>Vendor A</td>\n<td>₹52,00,000</td>\n<td>3 Years</td>\n<td>30 Days</td>\n<td>Business Hours</td>\n<td>Medium</td>\n</tr>\n\n<tr>\n<td>Vendor B</td>\n<td>₹48,00,000</td>\n<td>2 Years</td>\n<td>25 Days</td>\n<td>Standard</td>\n<td>Low</td>\n</tr>\n\n<tr>\n<td>Vendor C</td>\n<td>₹51,00,000</td>\n<td>4 Years</td>\n<td>45 Days</td>\n<td>Premium</td>\n<td>High</td>\n</tr>\n\n</table>\n\n</div>\n\n<div class=\"section\">\n\n<h2>📊 Comparative Analysis</h2>\n\n<ul>\n<li>Vendor B offers the lowest procurement cost.</li>\n<li>Vendor B provides the fastest delivery timeline.</li>\n<li>Vendor C provides the strongest warranty coverage.</li>\n<li>Vendor C includes premium support services.</li>\n<li>Vendor A provides balanced commercial terms.</li>\n</ul>\n\n</div>\n\n<div class=\"section\">\n\n<h2>⚠ Risk Assessment</h2>\n\n<div class=\"risk-box\">\n\n<strong>Financial Risk:</strong> Medium<br><br>\n\nVendor A and Vendor C exceed the planned procurement budget.\n\n<br><br>\n\n<strong>Delivery Risk:</strong> High for Vendor C due to delivery commitment exceeding requirements.\n\n<br><br>\n\n<strong>Contract Risk:</strong> Vendor C contains auto-renewal clauses requiring legal review.\n\n</div>\n\n</div>\n\n<div class=\"section\">\n\n<h2>🏆 AI Recommendation</h2>\n\n<div class=\"recommendation\">\n\n<h3>Recommended Vendor: Vendor B – SmartTech Solutions</h3>\n\n<p>\nVendor B delivers the strongest balance between cost efficiency,\ndelivery performance, and overall procurement risk.\n</p>\n\n<p>\nVendor B remains within budget while providing the fastest delivery timeline.\n</p>\n\n<br>\n\n<span class=\"score\">Confidence Score: 92%</span>\n\n<br><br>\n\n<strong>Expected Savings:</strong> ₹4,00,000 compared to Vendor A\n\n<br><br>\n\n<strong>Procurement Cycle Reduction:</strong> 70%\n\n</div>\n\n</div>\n\n<div class=\"section\">\n\n<h2>📌 Executive Decision</h2>\n\n<p>\nBased on financial evaluation, operational requirements,\ndelivery commitments, warranty coverage, and risk analysis,\nthe AI Procurement Officer recommends proceeding with\n<strong class=\"highlight\">Vendor B – SmartTech Solutions</strong>.\n</p>\n\n</div>\n\n<div class=\"footer\">\n\nAI Procurement Officer Agentic System<br>\nAutonomous Procurement Intelligence Platform\n\n</div>\n\n</div>\n\n</body>\n</html>\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        304
+      ],
+      "id": "bed759ad-99a0-4ed6-bdb0-ddbcff350bd9",
+      "name": "Send a message",
+      "webhookId": "887f3937-9984-41d6-b965-392e51238975",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "VCmlqbkPlbuPFcrh",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Extract Vendor A",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract Vendor B",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Vendor A": {
+      "main": [
+        [
+          {
+            "node": "Extract Vendor C",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Vendor B": {
+      "main": [
+        [
+          {
+            "node": "Extract Vendor C",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Vendor C": {
+      "main": [
+        [
+          {
+            "node": "Vendor Comparison Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Vendor Comparison Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Vendor Comparison Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vendor Comparison Agent": {
+      "main": [
+        [
+          {
+            "node": "Risk Assessment Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Risk Assessment Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Risk Assessment Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Risk Assessment Agent": {
+      "main": [
+        [
+          {
+            "node": "Contract Review Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Contract Review Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser2": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Contract Review Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contract Review Agent": {
+      "main": [
+        [
+          {
+            "node": "Recommendation Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Recommendation Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser3": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Recommendation Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recommendation Agent": {
+      "main": [
+        [
+          {
+            "node": "Executive Report Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Executive Report Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser4": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Executive Report Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Executive Report Agent": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "ec7bd90f-e7cd-4fd8-9a4c-ae52666e97ff",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "55de7f674ab58be8b0c2e83bd116a8a2074ec94d79f4953c2a8575f410e1943d"
+  },
+  "id": "85I5wD1eAU8TvuXR",
+  "tags": []
+}
