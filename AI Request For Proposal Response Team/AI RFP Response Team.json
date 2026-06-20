@@ -1,0 +1,736 @@
+{
+  "name": "AI RFP Response Team",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "AI RFP Response Team",
+        "formDescription": "Upload project requirements and generate a complete business proposal using a team of AI agents.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Client Name"
+            },
+            {
+              "fieldLabel": "Project Name"
+            },
+            {
+              "fieldLabel": "Industry",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Banking"
+                  },
+                  {
+                    "option": "HealthCare"
+                  },
+                  {
+                    "option": "Retail"
+                  },
+                  {
+                    "option": "Manufacturing"
+                  },
+                  {
+                    "option": "Education"
+                  },
+                  {
+                    "option": "Technology"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Budget Range",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "₹10L–₹25L"
+                  },
+                  {
+                    "option": "₹25L–₹50L"
+                  },
+                  {
+                    "option": "₹50L–₹1Cr"
+                  },
+                  {
+                    "option": "₹1Cr+"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Project Requirements",
+              "fieldType": "textarea"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        -112,
+        -80
+      ],
+      "id": "6636ae2d-6517-432e-8a2e-8808cadd7e61",
+      "name": "On form submission",
+      "webhookId": "98f1ff83-e24a-4853-8dde-c1bf4ceb9206"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Proposal Planning Agent.\n\nAnalyze the client request.\n\nClient Name:\n{{ $json[\"Client Name\"] }}\n\nProject Name:\n{{ $json[\"Project Name\"] }}\n\nIndustry:\n{{ $json[\"Industry\"] }}\n\nBudget:\n{{ $json[\"Budget Range\"] }}\n\nRequirements:\n{{ $json[\"Project Requirements\"] }}\n\nCreate a project plan.\n\nReturn:\n- project_objective\n- key_deliverables\n- implementation_priorities\n- proposal_strategy",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -96,
+        144
+      ],
+      "id": "c8392ac6-b096-4428-b45f-d7c9de7c7c5a",
+      "name": "Planner Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        336
+      ],
+      "id": "ed82a9b4-5071-4ac0-b7aa-f76f877ba4ea",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"project_objective\": \"string\",\n  \"key_deliverables\": \"string\",\n  \"implementation_priorities\": \"string\",\n  \"proposal_strategy\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        320
+      ],
+      "id": "2b5700c9-f45d-4d14-b9b5-304095cfb25b",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Business Analyst.\n\nAnalyze the project plan below and derive detailed business requirements.\n\nProject Objective:\n{{ $json.output.project_objective }}\n\nKey Deliverables:\n{{ $json.output.key_deliverables }}\n\nImplementation Priorities:\n{{ $json.output.implementation_priorities }}\n\nProposal Strategy:\n{{ $json.output.proposal_strategy }}\n\nCreate:\n\n1. Functional Requirements\n2. Non Functional Requirements\n3. Required Integrations\n4. Constraints\n5. Success Criteria",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        96,
+        -64
+      ],
+      "id": "378998a4-2b7b-4be0-82f1-debef7876fb9",
+      "name": "Requirement Analysis Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        208,
+        144
+      ],
+      "id": "655e8859-38d5-492b-b276-03cd11057651",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"functional_requirements\": \"string\",\n  \"non_functional_requirements\": \"string\",\n  \"integrations\": \"string\",\n  \"constraints\": \"string\",\n  \"success_criteria\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        320,
+        128
+      ],
+      "id": "3db53f7e-d965-4b44-a778-ac8f29e3b4ed",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Enterprise Solution Architect.\n\nBased on the requirements below, design the technical solution.\n\nFunctional Requirements:\n{{ $json.output.functional_requirements }}\n\nNon Functional Requirements:\n{{ $json.output.non_functional_requirements }}\n\nIntegrations:\n{{ $json.output.integrations }}\n\nConstraints:\n{{ $json.output.constraints }}\n\nSuccess Criteria:\n{{ $json.output.success_criteria }}\n\nRecommend:\n\n- frontend\n- backend\n- database\n- cloud\n- ai_stack\n- security\n- architecture_summary\n\nChoose technologies suitable for:\n\n- Banking Industry\n- 500,000 customers\n- High scalability\n- High availability\n- Enterprise security\n\nReturn only recommendations.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        256,
+        256
+      ],
+      "id": "2f498a01-a70f-4f3f-bfca-9e4fdb313086",
+      "name": "Technical Solution Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        192,
+        480
+      ],
+      "id": "b842c18d-8aa0-4e7e-8ca6-440b67d5ff5a",
+      "name": "Groq Chat Model2",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"frontend\": \"string\",\n  \"backend\": \"string\",\n  \"database\": \"string\",\n  \"cloud\": \"string\",\n  \"ai_stack\": \"string\",\n  \"security\": \"string\",\n  \"architecture_summary\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        368,
+        496
+      ],
+      "id": "d70d3134-28a5-4845-bb3a-d7fa0d87eb7c",
+      "name": "Structured Output Parser2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior IT Cost Estimation Consultant.\n\nEstimate the project cost based on the architecture below.\n\nFrontend:\n{{ $json.output.frontend }}\n\nBackend:\n{{ $json.output.backend }}\n\nDatabase:\n{{ $json.output.database }}\n\nCloud:\n{{ $json.output.cloud }}\n\nAI Stack:\n{{ $json.output.ai_stack }}\n\nSecurity:\n{{ $json.output.security }}\n\nArchitecture:\n{{ $json.output.architecture_summary }}\n\nClient Industry:\nBanking\n\nExpected Users:\n500,000\n\nRequirements:\n- AI Chatbot\n- CRM Integration\n- Analytics Dashboard\n- Multi-language Support\n- 99.9% Uptime\n\nEstimate:\n\n1. Development Cost\n2. Infrastructure Cost\n3. Support & Maintenance Cost\n4. Total Project Cost\n\nProvide realistic enterprise estimates.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        448,
+        -64
+      ],
+      "id": "c851d4d3-c542-4e9a-b816-b5cfb02205dd",
+      "name": "Cost Estimation Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        496,
+        160
+      ],
+      "id": "d34439f2-da6e-42d8-9de7-cf835ae66673",
+      "name": "Groq Chat Model3",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"development_cost\": \"string\",\n  \"infrastructure_cost\": \"string\",\n  \"support_cost\": \"string\",\n  \"total_cost\": \"string\",\n  \"cost_justification\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        640,
+        128
+      ],
+      "id": "440806fc-522e-45f8-9c3f-9e586f0bf536",
+      "name": "Structured Output Parser3"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Enterprise Proposal Writer.\n\nCreate a professional business proposal using the information below.\n\nPROJECT PLANNING:\n\n{{ JSON.stringify($('Planner Agent').item.json.output) }}\n\nREQUIREMENTS ANALYSIS:\n\n{{ JSON.stringify($('Requirement Analysis Agent').item.json.output) }}\n\nTECHNICAL SOLUTION:\n\n{{ JSON.stringify($('Technical Solution Agent').item.json.output) }}\n\nCOST ESTIMATION:\n\n{{ JSON.stringify($('Cost Estimation Agent').item.json.output) }}\n\nCreate a client-ready proposal.\n\nInclude:\n\n1. Executive Summary\n\n2. Business Problem\n\n3. Project Objectives\n\n4. Functional Requirements\n\n5. Proposed Technical Solution\n\n6. Technical Architecture\n\n7. Technology Stack\n\n8. Security & Compliance\n\n9. Implementation Approach\n\n10. Cost Estimation\n\n11. Business Benefits\n\n12. Conclusion\n\nRules:\n\n- Do not use placeholders.\n- Do not invent unrelated projects.\n- Use the exact project information.\n- Write in consulting-company style.\n- Make the proposal professional and detailed.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        736,
+        -64
+      ],
+      "id": "e56d7a6e-02c7-4dce-8425-f2f581419e4b",
+      "name": "Proposal Writer Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        784,
+        128
+      ],
+      "id": "0d0ba5bf-6510-43af-b5cf-aa0bfb6fbafd",
+      "name": "Groq Chat Model4",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Proposal Review Board.\n\nReview the proposal below.\n\nProposal:\n\n{{ $json.output }}\n\nYour responsibility:\n\nChallenge the proposal.\n\nIdentify:\n\n1. Missing Requirements\n2. Technical Risks\n3. Security Risks\n4. Cost Risks\n5. Scalability Risks\n6. Compliance Gaps\n7. Improvement Recommendations\n\nDo not rewrite the proposal.\n\nOnly critique it professionally.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        624,
+        400
+      ],
+      "id": "2d7036ef-2543-4b5c-88b2-5080aad5bf5b",
+      "name": "Critic Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        608,
+        560
+      ],
+      "id": "3ca8b6e0-e9d3-49a2-9f84-09e1a7f27160",
+      "name": "Groq Chat Model5",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"missing_requirements\": \"string\",\n  \"technical_risks\": \"string\",\n  \"security_risks\": \"string\",\n  \"cost_risks\": \"string\",\n  \"improvement_recommendations\": \"string\",\n  \"proposal_score\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        720,
+        544
+      ],
+      "id": "37d0718b-9875-466e-9e6b-a0853876f85e",
+      "name": "Structured Output Parser4"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        496
+      ],
+      "id": "00e0a3fe-6967-43dd-a00d-7eafab6d54fa",
+      "name": "Groq Chat Model6",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Generate the proposal in the following format exactly:\n\n# Executive Summary\n\n[content]\n\n# Business Problem\n\n[content]\n\n# Project Objectives\n\n* objective 1\n* objective 2\n* objective 3\n\n# Key Deliverables\n\n* deliverable 1\n* deliverable 2\n* deliverable 3\n\n# Functional Requirements\n\n* requirement 1\n* requirement 2\n\n# Technical Architecture\n\n[content]\n\n# Technology Stack\n\nFrontend: ...\nBackend: ...\nDatabase: ...\nCloud: ...\nAI Stack: ...\nSecurity: ...\n\n# Security & Compliance\n\n[content]\n\n# Disaster Recovery Strategy\n\n[content]\n\n# Implementation Approach\n\n[content]\n\n# Cost Estimation\n\n| Category       | Cost |\n| -------------- | ---- |\n| Development    | xxx  |\n| Infrastructure | xxx  |\n| Support        | xxx  |\n| Total          | xxx  |\n\n# Business Benefits\n\n* benefit 1\n* benefit 2\n* benefit 3\n\n# Risk Mitigation\n\n* risk 1 → mitigation\n* risk 2 → mitigation\n\n# Success Metrics\n\n* metric 1\n* metric 2\n* metric 3\n\n# Conclusion\n\n[content]\n\nDo not use markdown symbols such as **.\nDo not generate one large paragraph.\nKeep each section concise and readable.\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        816,
+        240
+      ],
+      "id": "507e57e6-c29f-4979-b6d5-aa6efa7352a6",
+      "name": "Proposal Improvement Agent"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an Enterprise Proposal Approval Board.\n\nReview the final proposal.\n\nProposal:\n\n{{ $json.output }}\n\nDecide:\n\n1. APPROVED\n2. NEEDS_REVISION\n3. REJECTED\n\nEvaluate:\n\n- Completeness\n- Technical Feasibility\n- Security\n- Cost Justification\n- Business Value\n\nProvide final decision and reasoning.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1120,
+        240
+      ],
+      "id": "96f27a0c-2ec6-4dfd-ac94-d98f2be5356e",
+      "name": "Final Decision Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1232,
+        432
+      ],
+      "id": "03cc54d7-5286-4b2e-81e7-33e99bcfbc4c",
+      "name": "Groq Chat Model7",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"decision\": \"string\",\n  \"confidence_score\": \"string\",\n  \"approval_reason\": \"string\",\n  \"remaining_concerns\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1408,
+        432
+      ],
+      "id": "c4ace60f-3cb5-4216-b0a8-d67584b66cb2",
+      "name": "Structured Output Parser5"
+    },
+    {
+      "parameters": {
+        "sendTo": "praveenpraveensimhadri@gmail.com ",
+        "subject": "=AI RFP Proposal - {{$json.output.decision}}",
+        "message": "=<h1>AI RFP Proposal Report</h1>\n\n<h2>Approval Summary</h2>\n\n<table border=\"1\" cellpadding=\"8\">\n<tr>\n<td><b>Status</b></td>\n<td>{{$('Final Decision Agent').item.json.output.decision}}</td>\n</tr>\n<tr>\n<td><b>Confidence Score</b></td>\n<td>{{$('Final Decision Agent').item.json.output.confidence_score}}</td>\n</tr>\n</table>\n\n<hr>\n\n<pre style=\"\nwhite-space: pre-wrap;\nfont-family: Arial;\nfont-size:14px;\nline-height:1.7;\n\">\n{{$('Proposal Improvement Agent').item.json.output}}\n</pre>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1184,
+        16
+      ],
+      "id": "1e7045fc-6549-4382-b772-1c193d1ddf9a",
+      "name": "Send a message",
+      "webhookId": "b9746ffb-ab5e-4afa-8d8c-25ec1c50bfc1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "VCmlqbkPlbuPFcrh",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Planner Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Planner Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Planner Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Planner Agent": {
+      "main": [
+        [
+          {
+            "node": "Requirement Analysis Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Requirement Analysis Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Requirement Analysis Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Requirement Analysis Agent": {
+      "main": [
+        [
+          {
+            "node": "Technical Solution Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Technical Solution Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser2": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Technical Solution Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Technical Solution Agent": {
+      "main": [
+        [
+          {
+            "node": "Cost Estimation Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Cost Estimation Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser3": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Cost Estimation Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cost Estimation Agent": {
+      "main": [
+        [
+          {
+            "node": "Proposal Writer Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Proposal Writer Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Proposal Writer Agent": {
+      "main": [
+        [
+          {
+            "node": "Critic Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Critic Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser4": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Critic Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Critic Agent": {
+      "main": [
+        [
+          {
+            "node": "Proposal Improvement Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model6": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Proposal Improvement Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Proposal Improvement Agent": {
+      "main": [
+        [
+          {
+            "node": "Final Decision Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model7": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Final Decision Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser5": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Final Decision Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Decision Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "b4a449d8-9e3a-48cd-9980-b1eea9175ae5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "55de7f674ab58be8b0c2e83bd116a8a2074ec94d79f4953c2a8575f410e1943d"
+  },
+  "id": "qoU09CNx8SXiPpsk",
+  "tags": []
+}
