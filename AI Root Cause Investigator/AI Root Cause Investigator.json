@@ -1,0 +1,1148 @@
+{
+  "name": "AI Root Cause Investigator",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Incident Title",
+        "formDescription": "Users unable to complete payments.\nAPI returning 500 errors.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Error Logs",
+              "fieldType": "textarea"
+            },
+            {
+              "fieldLabel": "Recent Deployments",
+              "fieldType": "textarea"
+            },
+            {
+              "fieldLabel": "Affected Services",
+              "fieldType": "textarea"
+            },
+            {
+              "fieldLabel": "Impact Level",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Low"
+                  },
+                  {
+                    "option": "Medium"
+                  },
+                  {
+                    "option": "High"
+                  },
+                  {
+                    "option": "Critical"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        0,
+        -96
+      ],
+      "id": "ba8de585-f1f8-4ed4-9aa0-d4cd0b60e5ff",
+      "name": "On form submission",
+      "webhookId": "1a719e0e-fe2d-4f5e-8856-336c5aff00ea"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an Evidence Collection Agent in an Incident Response Team.\n\nYour responsibility is to collect, organize, and summarize incident evidence.\n\nDo NOT determine the root cause.\nDo NOT suggest fixes.\nDo NOT make assumptions.\n\nAnalyze the information below.\n\nError Logs:\n{{ $json[\"Error Logs\"] }}\n\nRecent Deployments:\n{{ $json[\"Recent Deployments\"] }}\n\nAffected Services:\n{{ $json[\"Affected Services\"] }}\n\nImpact Level:\n{{ $json[\"Impact Level\"] }}\n\nTasks:\n\n1. Summarize the incident.\n2. Extract observed errors.\n3. Identify affected services.\n4. Identify recent changes.\n5. Assess business impact.\n\nReturn structured JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        0,
+        112
+      ],
+      "id": "edf3bd38-5175-4592-bd5f-541dff005dd6",
+      "name": "Evidence Collection Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        304
+      ],
+      "id": "70da0680-a13c-4446-8473-99a6c376d566",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"incident_summary\": \"string\",\n  \"observed_errors\": \"string\",\n  \"affected_services\": \"string\",\n  \"recent_changes\": \"string\",\n  \"impact_assessment\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        96,
+        304
+      ],
+      "id": "6a225b2a-b092-4372-bb31-4a892f273fd0",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Log Analysis Agent in an Incident Response Team.\n\nYour responsibility is to analyze system logs and classify errors.\n\nDo NOT determine root cause.\nDo NOT recommend solutions.\nDo NOT make assumptions beyond available evidence.\n\nObserved Errors:\n{{ $json.output.observed_errors }}\n\nAffected Services:\n{{ $json.output.affected_services }}\n\nIncident Summary:\n{{ $json.output.incident_summary }}\n\nTasks:\n\n1. Categorize the errors.\n2. Determine severity level.\n3. Identify likely affected system component.\n4. Identify error frequency.\n5. Provide technical observations.\n\nReturn structured JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        160,
+        -96
+      ],
+      "id": "36f469c4-0d75-4066-bfaf-5b3aae50db63",
+      "name": "Log Analysis Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        240,
+        64
+      ],
+      "id": "33e616a6-ac79-40a3-a24f-89b7143906f8",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"error_category\": \"string\",\n  \"severity\": \"string\",\n  \"suspected_component\": \"string\",\n  \"error_frequency\": \"string\",\n  \"technical_observations\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        368,
+        80
+      ],
+      "id": "b6a3a985-179d-4176-93c3-be4260760ac4",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an Error Pattern Recognition Agent.\n\nYour responsibility is to identify known incident patterns from log analysis findings.\n\nDo NOT determine the final root cause.\nDo NOT recommend fixes.\n\nAnalyze:\n\nError Category:\n{{ $json.output.error_category }}\n\nSeverity:\n{{ $json.output.severity }}\n\nSuspected Component:\n{{ $json.output.suspected_component }}\n\nTechnical Observations:\n{{ $json.output.technical_observations }}\n\nTasks:\n\n1. Identify known incident patterns.\n2. Determine confidence level.\n3. Explain why the pattern matches.\n4. List alternative patterns if applicable.\n\nReturn structured JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        272,
+        160
+      ],
+      "id": "d6fbbf3f-1b36-4ca8-91ef-fd0ea0b0a0fc",
+      "name": "Error Pattern Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        224,
+        352
+      ],
+      "id": "1861029e-aeac-44e3-8ab0-1956ca53c492",
+      "name": "Groq Chat Model2",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"primary_pattern\": \"string\",\n  \"confidence\": \"string\",\n  \"pattern_reasoning\": \"string\",\n  \"alternative_patterns\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        368,
+        368
+      ],
+      "id": "1965e98c-6c67-4b8b-944d-725b5eb8e6db",
+      "name": "Structured Output Parser2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Incident Investigation Agent.\n\nYour job is to generate multiple possible explanations for the incident.\n\nDO NOT determine the final root cause.\n\nDO NOT recommend fixes.\n\nGenerate competing hypotheses based on available evidence.\n\nIncident Summary:\n{{ $('Evidence Collection Agent').item.json.output.incident_summary }}\n\nError Category:\n{{ $('Log Analysis Agent').item.json.output.error_category }}\n\nTechnical Observations:\n{{ $('Log Analysis Agent').item.json.output.technical_observations }}\n\nPrimary Pattern:\n{{ $('Error Pattern Agent').item.json.output.primary_pattern }}\n\nPattern Confidence:\n{{ $('Error Pattern Agent').item.json.output.confidence }}\n\nTasks:\n\n1. Generate the 3 most likely root cause hypotheses.\n2. Rank them from most likely to least likely.\n3. Explain why each hypothesis is plausible.\n4. Identify what evidence supports each hypothesis.\n\nReturn structured JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        448,
+        -96
+      ],
+      "id": "375c5ef1-56ae-480a-b77c-3cf422e7cfe6",
+      "name": "Hypothesis Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        480,
+        96
+      ],
+      "id": "f06b3125-97b2-442c-8ecd-acc0420fa591",
+      "name": "Groq Chat Model3",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"hypothesis_1\": \"string\",\n  \"hypothesis_1_reasoning\": \"string\",\n\n  \"hypothesis_2\": \"string\",\n  \"hypothesis_2_reasoning\": \"string\",\n\n  \"hypothesis_3\": \"string\",\n  \"hypothesis_3_reasoning\": \"string\",\n\n  \"most_likely_hypothesis\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        624,
+        96
+      ],
+      "id": "87399bff-6edb-4ebd-a89a-1f13de8c9fd8",
+      "name": "Structured Output Parser3"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Principal Incident Investigation Reviewer.\n\nYour job is to validate competing root cause hypotheses.\n\nAnalyze available evidence carefully.\n\nDo not blindly trust any hypothesis.\n\nEvaluate each hypothesis based on:\n\n- Incident evidence\n- Log analysis findings\n- Error patterns\n- Deployment changes\n\nTasks:\n\n1. Score each hypothesis from 0-100.\n2. Explain supporting evidence.\n3. Explain contradicting evidence.\n4. Identify the most likely root cause.\n5. Provide confidence level.\n\nIncident Summary:\n{{ $('Evidence Collection Agent').item.json.output.incident_summary }}\n\nTechnical Observations:\n{{ $('Log Analysis Agent').item.json.output.technical_observations }}\n\nPrimary Pattern:\n{{ $('Error Pattern Agent').item.json.output.primary_pattern }}\n\nHypothesis 1:\n{{ $('Hypothesis Agent').item.json.output.hypothesis_1 }}\n\nHypothesis 2:\n{{ $('Hypothesis Agent').item.json.output.hypothesis_2 }}\n\nHypothesis 3:\n{{ $('Hypothesis Agent').item.json.output.hypothesis_3 }}\n\nReturn structured JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        592,
+        208
+      ],
+      "id": "b48f8fc2-9afd-4d7f-ab6c-3119e9c7d3b2",
+      "name": "Root Cause Validator Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        576,
+        400
+      ],
+      "id": "380da43f-5323-4f22-9945-0eded86c7fcf",
+      "name": "Groq Chat Model4",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"hypothesis_1_score\": \"number\",\n  \"hypothesis_1_evidence\": \"string\",\n\n  \"hypothesis_2_score\": \"number\",\n  \"hypothesis_2_evidence\": \"string\",\n\n  \"hypothesis_3_score\": \"number\",\n  \"hypothesis_3_evidence\": \"string\",\n\n  \"validated_root_cause\": \"string\",\n  \"confidence\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        688,
+        432
+      ],
+      "id": "cb9fc256-a48a-48c2-a8f5-ff51e29e429f",
+      "name": "Structured Output Parser4"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Business Impact Analysis Agent in an Incident Response Team.\n\nYour responsibility is to assess the business consequences of the incident.\n\nDo NOT determine root cause.\nDo NOT recommend technical fixes.\n\nAnalyze:\n\nAffected Services:\n{{ $('Evidence Collection Agent').item.json.output.affected_services }}\n\nImpact Assessment:\n{{ $('Evidence Collection Agent').item.json.output.impact_assessment }}\n\nValidated Root Cause:\n{{ $('Root Cause Validator Agent').item.json.output.validated_root_cause }}\n\nImpact Level:\n{{ $('On form submission').item.json[\"Impact Level\"] }}\n\nTasks:\n\n1. Identify affected business operations.\n2. Estimate customer impact.\n3. Assess operational impact.\n4. Assess financial impact risk.\n5. Determine incident severity.\n6. Create a business impact summary.\n\nReturn structured JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        720,
+        -96
+      ],
+      "id": "450216ed-af6d-4c24-b277-cb0138d5dfa6",
+      "name": "Impact Analysis Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        768,
+        112
+      ],
+      "id": "1cb95767-78d6-4f25-b110-ea74e75a22b5",
+      "name": "Groq Chat Model5",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"affected_business_operations\": \"string\",\n  \"customer_impact\": \"string\",\n  \"operational_impact\": \"string\",\n  \"financial_impact_risk\": \"string\",\n  \"incident_severity\": \"string\",\n  \"business_impact_summary\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        896,
+        96
+      ],
+      "id": "41d18f0d-67fa-48b1-a8cb-68570fe50332",
+      "name": "Structured Output Parser5"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Incident Resolution Advisor.\n\nYour responsibility is to recommend recovery strategies.\n\nDo NOT execute actions.\n\nAnalyze:\n\nValidated Root Cause:\n{{ $('Root Cause Validator Agent').item.json.output.validated_root_cause }}\n\nConfidence:\n{{ $('Root Cause Validator Agent').item.json.output.confidence }}\n\nIncident Severity:\n{{ $('Impact Analysis Agent').item.json.output.incident_severity }}\n\nBusiness Impact:\n{{ $('Impact Analysis Agent').item.json.output.business_impact_summary }}\n\nTasks:\n\n1. Generate 3 possible resolution options.\n2. Explain advantages of each option.\n3. Explain risks of each option.\n4. Recommend the best option.\n5. Explain why it is preferred.\n\nReturn structured JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        896,
+        192
+      ],
+      "id": "da8cbca8-a9ce-464b-8a01-d43d3f056e79",
+      "name": "Resolution Recommendation Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        848,
+        416
+      ],
+      "id": "8a33f46c-fbb6-43bb-9c8a-dfcbc4f00cd4",
+      "name": "Groq Chat Model6",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"resolution_option_1\": \"string\",\n  \"option_1_advantages\": \"string\",\n  \"option_1_risks\": \"string\",\n\n  \"resolution_option_2\": \"string\",\n  \"option_2_advantages\": \"string\",\n  \"option_2_risks\": \"string\",\n\n  \"resolution_option_3\": \"string\",\n  \"option_3_advantages\": \"string\",\n  \"option_3_risks\": \"string\",\n\n  \"recommended_action\": \"string\",\n  \"recommendation_reason\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        992,
+        416
+      ],
+      "id": "0f539a19-1984-4be5-abde-d48692f139c9",
+      "name": "Structured Output Parser6"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Engineering Postmortem Analyst.\n\nYour responsibility is to identify long-term improvements that will reduce the likelihood of future incidents.\n\nDo NOT focus on immediate recovery.\n\nFocus on prevention.\n\nAnalyze:\n\nValidated Root Cause:\n{{ $('Root Cause Validator Agent').item.json.output.validated_root_cause }}\n\nBusiness Impact:\n{{ $('Impact Analysis Agent').item.json.output.business_impact_summary }}\n\nRecommended Resolution:\n{{ $('Resolution Recommendation Agent').item.json.output.recommended_action }}\n\nTasks:\n\n1. Identify why this incident was not prevented.\n2. Identify monitoring gaps.\n3. Identify process weaknesses.\n4. Recommend preventive actions.\n5. Recommend improvements to detection mechanisms.\n6. Create a postmortem summary.\n\nReturn structured JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        992,
+        -96
+      ],
+      "id": "40cda839-884d-427a-a0bf-39e38481c4b9",
+      "name": "Postmortem Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        96
+      ],
+      "id": "2f4193f7-1e29-41bf-ba92-f9c6ca906ebe",
+      "name": "Groq Chat Model7",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"prevention_gap\": \"string\",\n  \"monitoring_gap\": \"string\",\n  \"process_gap\": \"string\",\n  \"preventive_action_1\": \"string\",\n  \"preventive_action_2\": \"string\",\n  \"preventive_action_3\": \"string\",\n  \"postmortem_summary\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1200,
+        96
+      ],
+      "id": "e778855d-98b4-4426-a100-c9928676b3ae",
+      "name": "Structured Output Parser7"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Incident Commander.\n\nYour responsibility is to determine the overall response strategy for the incident.\n\nAnalyze:\n\nValidated Root Cause:\n{{ $('Root Cause Validator Agent').item.json.output.validated_root_cause }}\n\nRoot Cause Confidence:\n{{ $('Root Cause Validator Agent').item.json.output.confidence }}\n\nIncident Severity:\n{{ $('Impact Analysis Agent').item.json.output.incident_severity }}\n\nBusiness Impact:\n{{ $('Impact Analysis Agent').item.json.output.business_impact_summary }}\n\nRecommended Resolution:\n{{ $('Resolution Recommendation Agent').item.json.output.recommended_action }}\n\nPrevention Gap:\n{{ $('Postmortem Agent').item.json.output.prevention_gap }}\n\nTasks:\n\n1. Determine incident priority.\n2. Determine if executive escalation is required.\n3. Recommend immediate response strategy.\n4. Determine incident status.\n5. Provide overall incident command summary.\n\nReturn structured JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1216,
+        240
+      ],
+      "id": "758e7ad4-1938-4513-aab7-fdea38be5a0d",
+      "name": "Incident Commander Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        416
+      ],
+      "id": "680a7242-5f30-4130-a8d4-88c5ccb56a10",
+      "name": "Groq Chat Model8",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"incident_priority\": \"string\",\n  \"executive_escalation\": \"string\",\n  \"response_strategy\": \"string\",\n  \"incident_status\": \"string\",\n  \"command_summary\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1264,
+        432
+      ],
+      "id": "29f64a69-c325-4bc6-8002-10c49c1d24f6",
+      "name": "Structured Output Parser8"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Stakeholder Communication Agent.\n\nYour responsibility is to create audience-specific incident communications.\n\nCreate updates for:\n\n1. Executives\n2. Customers\n3. Technical Teams\n\nIncident Priority:\n{{ $('Incident Commander Agent').item.json.output.incident_priority }}\n\nIncident Status:\n{{ $('Incident Commander Agent').item.json.output.incident_status }}\n\nRoot Cause:\n{{ $('Root Cause Validator Agent').item.json.output.validated_root_cause }}\n\nBusiness Impact:\n{{ $('Impact Analysis Agent').item.json.output.business_impact_summary }}\n\nResponse Strategy:\n{{ $('Incident Commander Agent').item.json.output.response_strategy }}\n\nReturn structured JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1264,
+        -96
+      ],
+      "id": "685b559b-d1ac-4b70-8c10-839581fe90e7",
+      "name": "Stakeholder Communication Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        112
+      ],
+      "id": "25036008-c552-406a-991a-15790b4e0a3a",
+      "name": "Groq Chat Model9",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"executive_update\": \"string\",\n  \"customer_update\": \"string\",\n  \"technical_update\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1440,
+        128
+      ],
+      "id": "4617d90f-ec5a-4699-8545-afad05675de5",
+      "name": "Structured Output Parser9"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Recovery Verification Agent.\n\nYour responsibility is to verify whether incident recovery has been successful.\n\nAnalyze:\n\nRoot Cause:\n{{ $('Root Cause Validator Agent').item.json.output.validated_root_cause }}\n\nRecovery Actions:\n{{ $('Incident Commander Agent').item.json.output.response_strategy }}\n\n\nTasks:\n\n1. Determine recovery status.\n2. Evaluate service stability.\n3. Assess remaining risk.\n4. Estimate recovery confidence.\n5. Create recovery summary.\n\nReturn structured JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1472,
+        240
+      ],
+      "id": "7d2b6ce2-5b69-4e08-9fe2-23a7978ea148",
+      "name": "Recovery Verification Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1408,
+        480
+      ],
+      "id": "7cf3468d-2640-429f-9f39-1af0eb0c490d",
+      "name": "Groq Chat Model10",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"recovery_status\": \"Recovered / Partially Recovered / Not Recovered\",\n  \"service_stability\": \"Stable / Unstable / Monitoring Required\",\n  \"remaining_risk\": \"Low / Medium / High\",\n  \"recovery_confidence\": \"0-100%\",\n  \"recovery_summary\": \"Brief summary of recovery assessment\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1584,
+        480
+      ],
+      "id": "45d225ee-bf53-4d82-9561-746af6b53aa4",
+      "name": "Structured Output Parser10"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Knowledge Base Agent.\n\nAnalyze the incident investigation and create reusable knowledge.\n\nRoot Cause:\n{{ $('Root Cause Validator Agent').item.json.output.validated_root_cause }}\n\nResolution:\n{{ $('Resolution Recommendation Agent').item.json.output.recommended_action }}\n\nPostmortem:\n{{ $('Postmortem Agent').item.json.output.postmortem_summary }}\n\nRecovery Summary:\n{{ $('Recovery Verification Agent').item.json.output.recovery_summary }}\n\nCreate lessons learned and future prevention guidance.\n\nReturn structured JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1536,
+        -112
+      ],
+      "id": "f8454964-8fcf-4493-8c1c-88bfbc0db5fb",
+      "name": "Knowledge Base Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        112
+      ],
+      "id": "a6fb3b19-7782-4b59-8a37-6dc394cee4cb",
+      "name": "Groq Chat Model11",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"incident_category\": \"string\",\n  \"lesson_learned\": \"string\",\n  \"future_prevention\": \"string\",\n  \"knowledge_summary\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1648,
+        112
+      ],
+      "id": "2aa38356-bd68-44df-b6f7-a3f7c07af39f",
+      "name": "Structured Output Parser11"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an Executive Incident Reporting Agent.\n\nCreate a professional incident investigation report.\n\nUse:\n\nEvidence Collection:\n{{ $('Evidence Collection Agent').item.json.output.incident_summary }}\n\nRoot Cause:\n{{ $('Root Cause Validator Agent').item.json.output.validated_root_cause }}\n\nImpact:\n{{ $('Impact Analysis Agent').item.json.output.business_impact_summary }}\n\nResolution:\n{{ $('Resolution Recommendation Agent').item.json.output.recommended_action }}\n\nIncident Command:\n{{ $('Incident Commander Agent').item.json.output.command_summary }}\n\nRecovery:\n{{ $('Recovery Verification Agent').item.json.output.recovery_summary }}\n\nLessons Learned:\n{{ $('Knowledge Base Agent').item.json.output.lesson_learned }}\n\nFuture Prevention:\n{{ $('Knowledge Base Agent').item.json.output.future_prevention }}\n\nGenerate a structured executive incident report.\n\nReturn only the final report.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        64,
+        464
+      ],
+      "id": "1d5b57db-fd66-444f-971d-d927067af90e",
+      "name": "Executive Incident Report Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        224,
+        736
+      ],
+      "id": "97eb70a2-c14d-417e-8d00-70eb81296f71",
+      "name": "Groq Chat Model12",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "praveenpraveensimhadri@gmail.com ",
+        "subject": "=🚨 Incident Investigation Report - {{$now}}",
+        "message": "={{ $('Executive Incident Report Agent').item.json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        368,
+        464
+      ],
+      "id": "5992a254-7199-4ed0-ba7a-4cc46c28f515",
+      "name": "Send a message",
+      "webhookId": "7132b1a6-b6c2-48ce-b5c8-c9d28b4dcdcc",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "VCmlqbkPlbuPFcrh",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Evidence Collection Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Evidence Collection Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Evidence Collection Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evidence Collection Agent": {
+      "main": [
+        [
+          {
+            "node": "Log Analysis Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Log Analysis Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Log Analysis Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Analysis Agent": {
+      "main": [
+        [
+          {
+            "node": "Error Pattern Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Error Pattern Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser2": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Error Pattern Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Pattern Agent": {
+      "main": [
+        [
+          {
+            "node": "Hypothesis Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Hypothesis Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser3": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Hypothesis Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hypothesis Agent": {
+      "main": [
+        [
+          {
+            "node": "Root Cause Validator Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Root Cause Validator Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser4": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Root Cause Validator Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Root Cause Validator Agent": {
+      "main": [
+        [
+          {
+            "node": "Impact Analysis Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Impact Analysis Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser5": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Impact Analysis Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Impact Analysis Agent": {
+      "main": [
+        [
+          {
+            "node": "Resolution Recommendation Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model6": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Resolution Recommendation Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser6": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Resolution Recommendation Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolution Recommendation Agent": {
+      "main": [
+        [
+          {
+            "node": "Postmortem Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model7": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Postmortem Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser7": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Postmortem Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postmortem Agent": {
+      "main": [
+        [
+          {
+            "node": "Incident Commander Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model8": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Incident Commander Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser8": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Incident Commander Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Incident Commander Agent": {
+      "main": [
+        [
+          {
+            "node": "Stakeholder Communication Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model9": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Stakeholder Communication Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser9": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Stakeholder Communication Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stakeholder Communication Agent": {
+      "main": [
+        [
+          {
+            "node": "Recovery Verification Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model10": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Recovery Verification Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser10": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Recovery Verification Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recovery Verification Agent": {
+      "main": [
+        [
+          {
+            "node": "Knowledge Base Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model11": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Knowledge Base Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser11": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Knowledge Base Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Knowledge Base Agent": {
+      "main": [
+        [
+          {
+            "node": "Executive Incident Report Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model12": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Executive Incident Report Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Executive Incident Report Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "1f91a419-86d4-4deb-9009-e40909390588",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "55de7f674ab58be8b0c2e83bd116a8a2074ec94d79f4953c2a8575f410e1943d"
+  },
+  "id": "GWEaTEYSwxKsmPr2",
+  "tags": []
+}
