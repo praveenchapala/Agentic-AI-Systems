@@ -1,0 +1,1452 @@
+{
+  "name": "Autonomous Software Factory Supervisor",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Bug Submission form",
+        "formDescription": "This Form Takes the Overall Details of the Bugs",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Bug Title"
+            },
+            {
+              "fieldLabel": "Module Name",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Database"
+                  },
+                  {
+                    "option": "Deployments"
+                  },
+                  {
+                    "option": "LLM Studio"
+                  },
+                  {
+                    "option": "Resources"
+                  },
+                  {
+                    "option": "PrePod"
+                  },
+                  {
+                    "option": "Production"
+                  },
+                  {
+                    "option": "Observability"
+                  },
+                  {
+                    "option": "Billing"
+                  },
+                  {
+                    "option": "Authentication"
+                  },
+                  {
+                    "option": "other"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Environment",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Development"
+                  },
+                  {
+                    "option": "Pre-production"
+                  },
+                  {
+                    "option": "Production"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Bug Description",
+              "fieldType": "textarea"
+            },
+            {
+              "fieldLabel": "Steps To Reproduce",
+              "fieldType": "textarea"
+            },
+            {
+              "fieldLabel": "Expected Result",
+              "fieldType": "textarea"
+            },
+            {
+              "fieldLabel": "Actual Result",
+              "fieldType": "textarea"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        64,
+        0
+      ],
+      "id": "af8f3f8f-c3c5-4a24-afe0-de8830599b63",
+      "name": "On form submission",
+      "webhookId": "fb8ace5e-d980-46fb-9515-17eb76cbfe6e"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "bug_reports",
+          "mode": "list",
+          "cachedResultName": "bug_reports"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "bug_title": "={{ $json[\"Bug Title\"] }}",
+            "module_name": "={{ $json[\"Module Name\"] }}",
+            "environment": "={{ $json[\"Environment\"] }}",
+            "bug_description": "={{ $json[\"Bug Description\"] }}",
+            "steps_to_reproduce": "={{ $json[\"Steps To Reproduce\"] }}",
+            "expected_result": "={{ $json[\"Expected Result\"] }}",
+            "actual_result": "={{ $json[\"Actual Result\"] }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "bug_title",
+              "displayName": "bug_title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "module_name",
+              "displayName": "module_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "environment",
+              "displayName": "environment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "bug_description",
+              "displayName": "bug_description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "steps_to_reproduce",
+              "displayName": "steps_to_reproduce",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "expected_result",
+              "displayName": "expected_result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "actual_result",
+              "displayName": "actual_result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        80,
+        160
+      ],
+      "id": "344888e0-df45-48df-a277-87502967859a",
+      "name": "Insert rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "uf1Pwo13gjdPQ9Lm",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior QA Engineer and Bug Triage Specialist.\n\nAnalyze the bug report and return ONLY valid JSON.\n\nBug Title:\n{{ $('On form submission').item.json[\"Bug Title\"] }}\n\nModule:\n{{ $('On form submission').item.json[\"Module Name\"] }}\n\nEnvironment:\n{{ $('On form submission').item.json[\"Environment\"] }}\n\nDescription:\n{{ $('On form submission').item.json[\"Bug Description\"] }}\n\nSteps To Reproduce:\n{{ $('On form submission').item.json[\"Steps To Reproduce\"] }}\n\nExpected Result:\n{{ $('On form submission').item.json[\"Expected Result\"] }}\n\nActual Result:\n{{ $('On form submission').item.json[\"Actual Result\"] }}\n\nClassify the bug.\n\nPossible Categories:\n\n* UI Bug\n* Backend Bug\n* Database Bug\n* API Bug\n* Security Bug\n* Performance Bug\n* Infrastructure Bug\n\nPossible Severities:\n\n* Critical\n* High\n* Medium\n* Low\n\nPossible Priorities:\n\n* P1\n* P2\n* P3\n* P4\n\nReturn this exact JSON structure:\n\n{\n\"category\": \"\",\n\"severity\": \"\",\n\"priority\": \"\",\n\"root_cause\": \"\",\n\"recommendation\": \"\",\n\"confidence_score\": \"\"\n}\nconfidence_score must be an integer between 0 and 100.\n\nExamples:\n95 = Very High Confidence\n80 = High Confidence\n60 = Medium Confidence\n40 = Low Confidence\n\nDo not return decimals.\nDo not return percentages with % symbol.\nReturn only a number.\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        48,
+        384
+      ],
+      "id": "5ca03054-7b2f-4b30-a6bf-3c9b6429de7b",
+      "name": "Bug Analyzer Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        0,
+        576
+      ],
+      "id": "b42f4fdb-43aa-47bd-9d89-1740dddfa180",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"category\": \"string\",\n  \"severity\": \"string\",\n  \"priority\": \"string\",\n  \"root_cause\": \"string\",\n  \"recommendation\": \"string\",\n  \"confidence_score\": \"number\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        112,
+        576
+      ],
+      "id": "c67e3fa1-1630-42d5-9d8d-09056eb2c524",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "bug_reports",
+          "mode": "list",
+          "cachedResultName": "bug_reports"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "category": "={{ $('Bug Analyzer Agent').item.json.output.category }}",
+            "severity": "={{ $('Bug Analyzer Agent').item.json.output.severity }}",
+            "priority": "={{ $('Bug Analyzer Agent').item.json.output.priority }}",
+            "root_cause": "={{ $('Bug Analyzer Agent').item.json.output.root_cause }}",
+            "recommendation": "={{ $('Bug Analyzer Agent').item.json.output.recommendation }}",
+            "confidence_score": "={{ $('Bug Analyzer Agent').item.json.output.confidence_score }}",
+            "id": "={{ $('Insert rows in a table').item.json.id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "bug_title",
+              "displayName": "bug_title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "module_name",
+              "displayName": "module_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "environment",
+              "displayName": "environment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "bug_description",
+              "displayName": "bug_description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "steps_to_reproduce",
+              "displayName": "steps_to_reproduce",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "expected_result",
+              "displayName": "expected_result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "actual_result",
+              "displayName": "actual_result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "severity",
+              "displayName": "severity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "root_cause",
+              "displayName": "root_cause",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "recommendation",
+              "displayName": "recommendation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "confidence_score",
+              "displayName": "confidence_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        256,
+        0
+      ],
+      "id": "cfe379d0-a44d-40e8-a091-720ef9fa4b9a",
+      "name": "Update rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "uf1Pwo13gjdPQ9Lm",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Incident Manager and Severity Validation Specialist.\n\nAnother AI agent has already analyzed this bug and assigned a category, severity, and priority.\n\nYour responsibility is to REVIEW the assigned severity and determine whether it is appropriate.\n\nDo NOT classify the bug from scratch.\n\nBug Details:\n\nCategory: {{ $json.output.category }}\n\nAssigned Severity: {{ $json.output.severity }}\n\nAssigned Priority: {{ $json.output.priority }}\n\nRoot Cause:\n{{ $json.output.root_cause }}\n\nRecommendation:\n{{ $json.output.recommendation }}\n\nConfidence Score:\n{{ $json.output.confidence_score }}\n\nSeverity Guidelines:\n\nCritical:\n\n* Complete production outage\n* Security breach\n* Data loss\n* Major revenue impact\n\nHigh:\n\n* Core functionality broken\n* Major user impact\n* No reasonable workaround\n\nMedium:\n\n* Partial functionality affected\n* Workaround available\n* Moderate business impact\n\nLow:\n\n* Cosmetic issue\n* Minor inconvenience\n* Minimal business impact\n\nReview the assigned severity and determine whether you agree with it.\n\nReturn ONLY valid JSON.\n\n{\n\"agreement\": \"true\",\n\"validated_severity\": \"High\",\n\"reason\": \"The bug impacts a core business function and significantly affects users.\"\n}\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        288,
+        208
+      ],
+      "id": "f9750ea1-7319-4eb1-a033-e58e3bd5370b",
+      "name": "Severity Validation error"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"agreement\": true,\n  \"validated_severity\": \"High\",\n  \"reason\": \"Example reason\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        448,
+        416
+      ],
+      "id": "43fc10f5-fb23-490d-80c8-9b1492b150e3",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        336,
+        416
+      ],
+      "id": "8d756e1f-35cc-4a4b-9e28-70395eb38317",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "96773a46-6b40-4afc-acf4-4ccc53327efa",
+              "leftValue": "={{ $json.output.agreement }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        480,
+        0
+      ],
+      "id": "32998bc7-4f41-47fa-8267-63e47afcc037",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Site Reliability Engineer (SRE) and Root Cause Analysis Specialist.\n\nAnalyze the bug details and generate a detailed root cause investigation report.\n\nBug Title:\n{{ $('Update rows in a table').item.json.bug_title }}\n\nModule:\n{{ $('Update rows in a table').item.json.module_name }}\n\nDescription:\n{{ $('Update rows in a table').item.json.bug_description }}\n\nCategory:\n{{ $('Bug Analyzer Agent').item.json.output.category }}\n\nSeverity:\n{{ $('Bug Analyzer Agent').item.json.output.severity }}\n\nInitial Root Cause:\n{{ $('Bug Analyzer Agent').item.json.output.root_cause }}\n\nReturn ONLY valid JSON.\n\n{\n\"possible_causes\": [\n\"\",\n\"\",\n\"\"\n],\n\"most_likely_cause\": \"\",\n\"investigation_steps\": [\n\"\",\n\"\",\n\"\"\n]\n}\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        528,
+        144
+      ],
+      "id": "1afc4974-6b68-414e-ae5a-79debf15b7fe",
+      "name": "Rootcause Investigator agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        592,
+        352
+      ],
+      "id": "90d03aa4-61a1-4bc7-b233-9b1990dec26c",
+      "name": "Groq Chat Model2",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"possible_causes\": [\"string\"],\n  \"most_likely_cause\": \"string\",\n  \"investigation_steps\": [\"string\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        736,
+        352
+      ],
+      "id": "a273a2f8-006c-4fde-bb83-33036449255d",
+      "name": "Structured Output Parser2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Incident Commander.\n\nBased on the bug analysis and root cause investigation, create a practical incident response plan.\n\nBug Severity:\n{{ $('Bug Analyzer Agent').item.json.output.severity }}\n\nBug Category:\n{{ $('Bug Analyzer Agent').item.json.output.category }}\n\nMost Likely Cause:\n{{ $json.output.most_likely_cause }}\n\nPossible Causes:\n{{ $json.output.possible_causes.join(', ') }}\n\nInvestigation Steps:\n{{ $json.output.investigation_steps.join(', ') }}\n\nReturn ONLY valid JSON.\n\n{\n\"immediate_actions\": [\n\"\",\n\"\",\n\"\"\n],\n\"short_term_actions\": [\n\"\",\n\"\",\n\"\"\n],\n\"long_term_actions\": [\n\"\",\n\"\",\n\"\"\n]\n}\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        416,
+        528
+      ],
+      "id": "cc6e8e4b-b5e5-4ed3-803b-2a399c00c045",
+      "name": "Incident Action Plan Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        368,
+        672
+      ],
+      "id": "8d7b2365-f942-4baf-ac70-54a77e9a43fd",
+      "name": "Groq Chat Model3",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"immediate_actions\": [\"string\"],\n  \"short_term_actions\": [\"string\"],\n  \"long_term_actions\": [\"string\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        528,
+        672
+      ],
+      "id": "40a53ad2-7b48-40f4-bf8e-253c4121cb5d",
+      "name": "Structured Output Parser3"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Engineering Manager and Incident Communication Specialist.\n\nYour responsibility is to create a concise executive-level incident summary based on the analysis performed by multiple AI agents.\n\nThe audience includes:\n\n* Engineering Managers\n* Project Managers\n* Product Owners\n* Company Leadership\n\nAvoid highly technical language wherever possible.\n\nBug Information:\n\nBug Title:\n{{ $('Update rows in a table').item.json.bug_title }}\n\nModule:\n{{ $('Update rows in a table').item.json.module_name }}\n\nEnvironment:\n{{ $('Update rows in a table').item.json.environment }}\n\nBug Category:\n{{ $('Bug Analyzer Agent').item.json.output.category }}\n\nSeverity:\n{{ $('Severity Validation error').item.json.output.validated_severity }}\n\nRoot Cause:\n{{ $('Rootcause Investigator agent').item.json.output.most_likely_cause }}\n\nImmediate Actions:\n{{ $('Incident Action Plan Agent').item.json.output.immediate_actions.join(', ') }}\n\nShort Term Actions:\n{{ $('Incident Action Plan Agent').item.json.output.short_term_actions.join(', ') }}\n\nLong Term Actions:\n{{ $('Incident Action Plan Agent').item.json.output.long_term_actions.join(', ') }}\n\nGenerate an executive summary that explains:\n\n1. What happened\n2. Business impact\n3. Most likely cause\n4. Recommended actions\n5. Overall risk level\n\nReturn ONLY valid JSON.\n\n{\n\"incident_summary\": \"\",\n\"business_impact\": \"\",\n\"root_cause_summary\": \"\",\n\"recommended_next_steps\": \"\",\n\"overall_risk\": \"\"\n}\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        624,
+        0
+      ],
+      "id": "1a535b78-b754-4503-938a-86f54b8916ac",
+      "name": "Executive Summary Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        832,
+        208
+      ],
+      "id": "66638517-580c-4309-852f-1f8940d46daa",
+      "name": "Groq Chat Model4",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"incident_summary\": \"string\",\n  \"business_impact\": \"string\",\n  \"root_cause_summary\": \"string\",\n  \"recommended_next_steps\": \"string\",\n  \"overall_risk\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        944,
+        208
+      ],
+      "id": "fa6783f8-d422-4298-afd7-fda1987579b0",
+      "name": "Structured Output Parser4"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Change Manager, Solution Architect, and Impact Analysis Specialist.\n\nYour responsibility is to analyze the incident and determine which systems, services, modules, and business functions may be affected.\n\nYou must assess the potential impact scope and identify dependencies that could be impacted by this issue.\n\nBug Information:\n\nBug Title:\n{{ $('Update rows in a table').item.json.bug_title }}\n\nModule:\n{{ $('Update rows in a table').item.json.module_name }}\n\nEnvironment:\n{{ $('Update rows in a table').item.json.environment }}\n\nCategory:\n{{ $('Bug Analyzer Agent').item.json.output.category }}\n\nSeverity:\n{{ $('Severity Validation error').item.json.output.validated_severity }}\n\nMost Likely Cause:\n{{ $('Rootcause Investigator agent').item.json.output.most_likely_cause }}\n\nPossible Causes:\n{{ $('Rootcause Investigator agent').item.json.output.possible_causes.join(', ') }}\n\nIncident Action Plan:\n{{ $('Incident Action Plan Agent').item.json.output.immediate_actions.join(', ') }}\n\nAnalysis Instructions:\n\n1. Identify all potentially affected components.\n2. Identify dependent services that may experience issues.\n3. Determine business impact scope.\n4. Determine operational impact scope.\n5. Estimate the blast radius of the incident.\n6. Assess whether the impact is:\n\n   * Low\n   * Medium\n   * High\n   * Critical\n\nReturn ONLY valid JSON.\n\n{\n\"affected_components\": [\n\"\",\n\"\",\n\"\"\n],\n\"dependent_services\": [\n\"\",\n\"\",\n\"\"\n],\n\"business_functions_affected\": [\n\"\",\n\"\",\n\"\"\n],\n\"impact_scope\": \"\",\n\"blast_radius\": \"\",\n\"change_risk\": \"\",\n\"impact_summary\": \"\"\n}\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        752,
+        512
+      ],
+      "id": "c05851a1-e0bb-46d6-b857-3910cc4de775",
+      "name": "Change Impact Analysis Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        784,
+        672
+      ],
+      "id": "19f0734a-d8a6-4a7c-846b-6c74ea05b081",
+      "name": "Groq Chat Model5",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"affected_components\": [\"string\"],\n  \"dependent_services\": [\"string\"],\n  \"business_functions_affected\": [\"string\"],\n  \"impact_scope\": \"string\",\n  \"blast_radius\": \"string\",\n  \"change_risk\": \"string\",\n  \"impact_summary\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        928,
+        672
+      ],
+      "id": "7f161552-4f34-4c36-8cd7-4c8e21861349",
+      "name": "Structured Output Parser5"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Incident Manager and IT Operations Lead.\n\nYour responsibility is to determine the appropriate escalation path for the incident.\n\nAnalyze the incident severity, business impact, affected systems, and risk level.\n\nIncident Details:\n\nSeverity:\n{{ $('Severity Validation error').item.json.output.validated_severity }}\n\nImpact Scope:\n{{ $('Change Impact Analysis Agent').item.json.output.impact_scope }}\n\nChange Risk:\n{{ $('Change Impact Analysis Agent').item.json.output.change_risk }}\n\nAffected Components:\n{{ $('Change Impact Analysis Agent').item.json.output.affected_components.join(', ') }}\n\nDependent Services:\n{{ $('Change Impact Analysis Agent').item.json.output.dependent_services.join(', ') }}\n\nImpact Summary:\n{{ $('Change Impact Analysis Agent').item.json.output.impact_summary }}\n\nDetermine:\n\n1. Which team should own the incident.\n2. Whether escalation is required.\n3. Escalation level (L1, L2, L3).\n4. Which stakeholders should be notified.\n5. Escalation justification.\n\nReturn ONLY valid JSON.\n\n{\n\"assigned_team\": \"\",\n\"escalation_required\": true,\n\"escalation_level\": \"\",\n\"notify_roles\": [\n\"\",\n\"\"\n],\n\"justification\": \"\"\n}\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        880,
+        368
+      ],
+      "id": "68799170-1908-48b7-8d0d-abae6bc68611",
+      "name": "Escalation Decision Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1072,
+        576
+      ],
+      "id": "9245a408-8265-4589-b5f4-e72440bae6cc",
+      "name": "Groq Chat Model6",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"assigned_team\": \"string\",\n  \"escalation_required\": true,\n  \"escalation_level\": \"string\",\n  \"notify_roles\": [\"string\"],\n  \"justification\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1184,
+        576
+      ],
+      "id": "c321be91-84c4-41bf-b220-5ed5670918e2",
+      "name": "Structured Output Parser6"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior IT Service Manager and SLA Compliance Specialist.\n\nYour responsibility is to evaluate the incident and determine SLA obligations.\n\nIncident Details:\n\nSeverity:\n{{ $('Severity Validation error').item.json.output.validated_severity }}\n\nImpact Scope:\n{{ $('Change Impact Analysis Agent').item.json.output.impact_scope }}\n\nChange Risk:\n{{ $('Change Impact Analysis Agent').item.json.output.change_risk }}\n\nEscalation Level:\n{{ $('Escalation Decision Agent').item.json.output.escalation_level }}\n\nAssigned Team:\n{{ $('Escalation Decision Agent').item.json.output.assigned_team }}\n\nDetermine:\n\n1. Required response time.\n2. Required resolution target.\n3. SLA risk level.\n4. Probability of SLA breach.\n5. Recommended urgency.\n\nUse realistic enterprise ITSM standards.\n\nReturn ONLY valid JSON.\n\n{\n\"response_time_target\": \"\",\n\"resolution_time_target\": \"\",\n\"sla_risk\": \"\",\n\"breach_probability\": \"\",\n\"recommended_urgency\": \"\"\n}\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        944,
+        16
+      ],
+      "id": "f77ec61d-32ce-46fe-94e1-7dc9077189a6",
+      "name": "SLA Compliance Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1056,
+        224
+      ],
+      "id": "fe2eee7a-62ed-4940-8e4e-f1f61f38ab9f",
+      "name": "Groq Chat Model7",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"response_time_target\": \"string\",\n  \"resolution_time_target\": \"string\",\n  \"sla_risk\": \"string\",\n  \"breach_probability\": \"string\",\n  \"recommended_urgency\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1152,
+        224
+      ],
+      "id": "0d1f03aa-a1e9-4418-b17a-707696a506d1",
+      "name": "Structured Output Parser7"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Knowledge Management Specialist and Technical Documentation Engineer.\n\nYour responsibility is to create a knowledge base article from the incident investigation.\n\nIncident Details:\n\nBug Title:\n{{ $('Insert rows in a table').item.json.bug_title }}\n\nCategory:\n{{ $('Bug Analyzer Agent').item.json.output.category }}\n\nSeverity:\n{{ $('Severity Validation error').item.json.output.validated_severity }}\n\nMost Likely Cause:\n{{ $('Rootcause Investigator agent').item.json.output.most_likely_cause }}\n\nPossible Causes:\n{{ $('Rootcause Investigator agent').item.json.output.possible_causes.join(', ') }}\n\nInvestigation Steps:\n{{ $('Rootcause Investigator agent').item.json.output.investigation_steps.join(', ') }}\n\nResolution Actions:\n{{ $('Incident Action Plan Agent').item.json.output.immediate_actions.join(', ') }}\n\nGenerate a knowledge article.\n\nReturn ONLY valid JSON.\n\n{\n  \"article_title\": \"\",\n  \"problem_summary\": \"\",\n  \"root_cause\": \"\",\n  \"troubleshooting_steps\": [],\n  \"resolution_steps\": [],\n  \"prevention_recommendations\": []\n}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1136,
+        304
+      ],
+      "id": "044dc4c8-9f57-4281-be3d-7da9f39261ea",
+      "name": "Knowledge Base Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        512
+      ],
+      "id": "868e83f9-c30f-4894-bfb8-b7e1b42f475c",
+      "name": "Groq Chat Model8",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"article_title\": \"string\",\n  \"problem_summary\": \"string\",\n  \"root_cause\": \"string\",\n  \"troubleshooting_steps\": [\"string\"],\n  \"resolution_steps\": [\"string\"],\n  \"prevention_recommendations\": [\"string\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1376,
+        512
+      ],
+      "id": "5b80ec73-c029-4083-86b4-a32277cb4288",
+      "name": "Structured Output Parser8"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Risk Management Specialist and Enterprise Architect.\n\nYour responsibility is to assess future risks associated with this incident.\n\nIncident Information:\n\nSeverity:\n{{ $('Severity Validation error').item.json.output.validated_severity }}\n\nMost Likely Cause:\n{{ $('Rootcause Investigator agent').item.json.output.most_likely_cause }}\n\nImpact Scope:\n{{ $('Change Impact Analysis Agent').item.json.output.impact_scope }}\n\nBusiness Impact:\n{{ $('Change Impact Analysis Agent').item.json.output.impact_summary }}\n\nEscalation Level:\n{{ $('Escalation Decision Agent').item.json.output.escalation_level }}\n\nSLA Risk:\n{{ $('SLA Compliance Agent').item.json.output.sla_risk }}\n\nAnalyze:\n\n1. Recurrence probability.\n2. Operational risk level.\n3. Business risk level.\n4. Customer impact risk.\n5. Preventive measures.\n\nReturn ONLY valid JSON.\n\n{\n  \"risk_level\": \"\",\n  \"recurrence_probability\": \"\",\n  \"business_risk\": \"\",\n  \"customer_impact_risk\": \"\",\n  \"preventive_actions\": [\n    \"\",\n    \"\"\n  ]\n}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1248,
+        48
+      ],
+      "id": "d741a68c-2f56-4228-b49f-231982b65f99",
+      "name": "Risk Assessment Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1376,
+        256
+      ],
+      "id": "cb7adebe-8e9a-4132-a194-4b281c4bcb02",
+      "name": "Groq Chat Model9",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"risk_level\": \"High\",\n  \"recurrence_probability\": \"Medium\",\n  \"business_risk\": \"High\",\n  \"customer_impact_risk\": \"Medium\",\n  \"preventive_actions\": [\n    \"Implement database monitoring\",\n    \"Add automated health checks\",\n    \"Improve error handling\",\n    \"Create recovery procedures\"\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1472,
+        256
+      ],
+      "id": "a8f7e223-a383-4ded-8a3a-7aa90955ebe7",
+      "name": "Structured Output Parser9"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a CIO-level Executive Incident Reporting Specialist.\n\nYour responsibility is to create a concise executive incident report using the outputs from all previous AI agents.\n\nIncident Information:\n\nBug Title:\n{{ $('Insert rows in a table').item.json.bug_title }}\n\nCategory:\n{{ $('Bug Analyzer Agent').item.json.output.category }}\n\nSeverity:\n{{ $('Severity Validation error').item.json.output.validated_severity }}\n\nMost Likely Cause:\n{{ $('Rootcause Investigator agent').item.json.output.most_likely_cause }}\n\nImpact Summary:\n{{ $('Change Impact Analysis Agent').item.json.output.impact_summary }}\n\nAssigned Team:\n{{ $('Escalation Decision Agent').item.json.output.assigned_team }}\n\nResolution Target:\n{{ $('SLA Compliance Agent').item.json.output.resolution_time_target }}\n\nRisk Level:\n{{ $('Risk Assessment Agent').item.json.output.risk_level }}\n\nPreventive Actions:\n{{ $('Risk Assessment Agent').item.json.output.preventive_actions.join(', ') }}\n\nGenerate a leadership-ready incident report.\n\nReturn ONLY valid JSON.\n\n{\n\"executive_summary\": \"\",\n\"business_impact\": \"\",\n\"current_status\": \"\",\n\"recommended_next_actions\": \"\",\n\"overall_risk\": \"\"\n}\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1408,
+        432
+      ],
+      "id": "aa14c072-de8c-4990-9b63-d59a694fc46f",
+      "name": "Executive Summary Agent1"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1472,
+        640
+      ],
+      "id": "2fadb1b7-997c-49e7-90eb-9058aa2f7ea9",
+      "name": "Groq Chat Model10",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"executive_summary\": \"string\",\n  \"business_impact\": \"string\",\n  \"current_status\": \"string\",\n  \"recommended_next_actions\": \"string\",\n  \"overall_risk\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1584,
+        640
+      ],
+      "id": "3ca464f5-a4cd-48d5-a9cb-6f51fd9cd6a9",
+      "name": "Structured Output Parser10"
+    },
+    {
+      "parameters": {
+        "sendTo": "praveenpraveensimhadri@gmail.com ",
+        "subject": "=🚨 [{{$json.output.overall_risk}}] Incident Report - {{$('Insert rows in a table').item.json.bug_title}}",
+        "message": "=<h2>🚨 Incident Report</h2>\n\n<h3>📌 Incident Details</h3>\n<ul>\n<li><b>Bug Title:</b> {{ $('Insert rows in a table').item.json.bug_title }}</li>\n<li><b>Category:</b> {{ $('Bug Analyzer Agent').item.json.output.category }}</li>\n<li><b>Severity:</b> {{ $('Severity Validation error').item.json.output.validated_severity }}</li>\n<li><b>Risk Level:</b> {{ $('Executive Summary Agent').item.json.output.overall_risk }}</li>\n</ul>\n\n<h3>📊 Executive Summary</h3>\n<p>{{ $('Executive Summary Agent').item.json.output.executive_summary }}</p>\n\n<h3>💼 Business Impact</h3>\n<p>{{ $('Executive Summary Agent').item.json.output.business_impact }}</p>\n\n<h3>🔍 Root Cause</h3>\n<p>{{ $('Rootcause Investigator agent').item.json.output.most_likely_cause }}</p>\n\n<h3>⚡ Immediate Actions</h3>\n<p>{{ $('Incident Action Plan Agent').item.json.output.immediate_actions.join('<br>') }}</p>\n\n<h3>📈 Impact Analysis</h3>\n<p>{{ $('Change Impact Analysis Agent').item.json.output.impact_summary }}</p>\n\n<h3>🚨 Escalation Details</h3>\n<ul>\n<li><b>Assigned Team:</b> {{ $('Escalation Decision Agent').item.json.output.assigned_team }}</li>\n<li><b>Escalation Level:</b> {{ $('Escalation Decision Agent').item.json.output.escalation_level }}</li>\n</ul>\n\n<h3>⏱ SLA Information</h3>\n<ul>\n<li><b>Response Time:</b> {{ $('SLA Compliance Agent').item.json.output.response_time_target }}</li>\n<li><b>Resolution Target:</b> {{ $('SLA Compliance Agent').item.json.output.resolution_time_target }}</li>\n</ul>\n\n<h3>🛡 Risk Assessment</h3>\n<ul>\n<li><b>Risk Level:</b> {{ $('Risk Assessment Agent').item.json.output.risk_level }}</li>\n<li><b>Recurrence Probability:</b> {{ $('Risk Assessment Agent').item.json.output.recurrence_probability }}</li>\n</ul>\n\n<h3>✅ Recommended Next Actions</h3>\n<p>{{ $('Executive Summary Agent').item.json.output.recommended_next_actions }}</p>\n\n<hr>\n\n<p><b>Generated Automatically by Autonomous Software Factory Supervisor</b></p>\n<p>Timestamp: {{ $now }}</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1584,
+        144
+      ],
+      "id": "291a5138-2058-4913-8fac-b50e00be45cb",
+      "name": "Send a message",
+      "webhookId": "02d835d4-bfec-4593-9efc-65819b73f49c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "VCmlqbkPlbuPFcrh",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Bug Analyzer Agent": [
+      {
+        "json": {
+          "output": {
+            "category": "Database Bug",
+            "severity": "High",
+            "priority": "P1",
+            "root_cause": "Potential issue with database connection or query execution",
+            "recommendation": "Investigate database logs and query execution to identify the root cause",
+            "confidence_score": "80"
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Insert rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert rows in a table": {
+      "main": [
+        [
+          {
+            "node": "Bug Analyzer Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Bug Analyzer Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Bug Analyzer Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bug Analyzer Agent": {
+      "main": [
+        [
+          {
+            "node": "Update rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update rows in a table": {
+      "main": [
+        [
+          {
+            "node": "Severity Validation error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Severity Validation error",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Severity Validation error",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Severity Validation error": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Rootcause Investigator agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Rootcause Investigator agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser2": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Rootcause Investigator agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rootcause Investigator agent": {
+      "main": [
+        [
+          {
+            "node": "Incident Action Plan Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Incident Action Plan Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser3": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Incident Action Plan Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Incident Action Plan Agent": {
+      "main": [
+        [
+          {
+            "node": "Executive Summary Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Executive Summary Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser4": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Executive Summary Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Executive Summary Agent": {
+      "main": [
+        [
+          {
+            "node": "Change Impact Analysis Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Change Impact Analysis Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser5": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Change Impact Analysis Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Change Impact Analysis Agent": {
+      "main": [
+        [
+          {
+            "node": "Escalation Decision Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model6": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Escalation Decision Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser6": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Escalation Decision Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Escalation Decision Agent": {
+      "main": [
+        [
+          {
+            "node": "SLA Compliance Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model7": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "SLA Compliance Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser7": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "SLA Compliance Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SLA Compliance Agent": {
+      "main": [
+        [
+          {
+            "node": "Knowledge Base Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model8": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Knowledge Base Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser8": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Knowledge Base Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Knowledge Base Agent": {
+      "main": [
+        [
+          {
+            "node": "Risk Assessment Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model9": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Risk Assessment Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser9": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Risk Assessment Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Risk Assessment Agent": {
+      "main": [
+        [
+          {
+            "node": "Executive Summary Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model10": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Executive Summary Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser10": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Executive Summary Agent1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Executive Summary Agent1": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "96314f6d-82ec-4457-9555-fb590c91c47c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "55de7f674ab58be8b0c2e83bd116a8a2074ec94d79f4953c2a8575f410e1943d"
+  },
+  "id": "1wwFfMpIHp04Y2fH",
+  "tags": []
+}
