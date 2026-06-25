@@ -1,0 +1,610 @@
+{
+  "name": "AI Production War Room",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Inccident Form",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Incident Title"
+            },
+            {
+              "fieldLabel": "Servicename",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Payment Service"
+                  },
+                  {
+                    "option": "User Service"
+                  },
+                  {
+                    "option": "Order Service"
+                  },
+                  {
+                    "option": "Notification Service"
+                  },
+                  {
+                    "option": "Authentication Service"
+                  },
+                  {
+                    "option": "Database Service"
+                  },
+                  {
+                    "option": "API GateWay"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Environment",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Production"
+                  },
+                  {
+                    "option": "Pre-Production"
+                  },
+                  {
+                    "option": "Staging"
+                  },
+                  {
+                    "option": "Development"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Severity",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Critical "
+                  },
+                  {
+                    "option": "High"
+                  },
+                  {
+                    "option": "Medium"
+                  },
+                  {
+                    "option": "Low"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Incident Description",
+              "fieldType": "textarea"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f20c2d38-2208-4ae3-84a8-3f33c54923b1",
+      "name": "On form submission",
+      "webhookId": "97a0bf0d-014b-45fd-af82-89dfcb878087"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an AI Incident Commander responsible for coordinating production incident investigations.\n\nYour responsibility is NOT to investigate the incident yourself.\n\nInstead, decide which specialist AI agents should analyze the incident.\n\nAvailable Specialist Agents:\n\n1. Impact Analysis Agent\n   - Determines affected users\n   - Business impact\n   - Severity\n\n2. Root Cause Analysis Agent\n   - Determines likely technical causes\n\n3. Communication Agent\n   - Determines stakeholders that should be notified\n\nIncident Details\n\nTitle:\n{{ $json[\"Incident Title\"] }}\n\nService:\n{{ $json[\"Servicename\"] }}\n\nEnvironment:\n{{ $json[\"Environment\"] }}\n\nSeverity:\n{{ $json[\"Severity\"] }}\n\nDescription:\n{{ $json[\"Incident Description\"] }}\n\nReturn ONLY valid JSON.\n\n{\n  \"agents\":[\n      \"impact_analysis\",\n      \"root_cause_analysis\",\n      \"communication\"\n  ],\n  \"reason\":\"Brief explanation.\"\n}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        160,
+        0
+      ],
+      "id": "9e12d1e1-6e29-4a6f-b363-981a6379d413",
+      "name": "Incident Commander Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        32,
+        208
+      ],
+      "id": "ab394ea6-b806-4f22-93b9-c66d31505de7",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"agents\": [\n    \"impact_analysis\",\n    \"root_cause_analysis\",\n    \"communication\"\n  ],\n  \"reason\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        192,
+        224
+      ],
+      "id": "28124d2d-42ee-4ea0-bf9b-1f0b1cb82132",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an Enterprise Impact Analysis Specialist in an AI Production War Room.\n\nYour ONLY responsibility is to assess the business and operational impact of the production incident.\n\nDo NOT investigate the technical root cause.\n\nIncident Details\n\nTitle:\n{{ $('On form submission').item.json[\"Incident Title\"] }}\n\nService:\n{{ $('On form submission').item.json[\"Servicename\"] }}\n\nEnvironment:\n{{ $('On form submission').item.json[\"Environment\"] }}\n\nReported Severity:\n{{ $('On form submission').item.json[\"Severity\"] }}\n\nDescription:\n{{ $('On form submission').item.json[\"Incident Description\"] }}\n\nIncident Commander Decision\n\n{{ $('Incident Commander Agent').item.json.output.reason }}\n\nAnalyze:\n\n1. Affected users\n2. Business impact\n3. Operational impact\n4. Financial impact\n5. Estimated severity\n6. Business priority\n\nReturn ONLY valid JSON.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        320,
+        -160
+      ],
+      "id": "66cb55a2-b593-4918-bfe4-76257fd8fff5",
+      "name": "Impact Analysis Agent"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Site Reliability Engineer (SRE) specializing in Root Cause Analysis.\n\nYour ONLY responsibility is to identify the most likely technical causes of the production incident.\n\nDo NOT evaluate business impact.\n\nIncident Details\n\nTitle:\n{{ $('On form submission').item.json[\"Incident Title\"] }}\n\nService:\n{{ $('On form submission').item.json[\"Servicename\"] }}\n\nEnvironment:\n{{ $('On form submission').item.json[\"Environment\"] }}\n\nDescription:\n{{ $('On form submission').item.json[\"Incident Description\"] }}\n\nAnalyze the incident and determine:\n\n1. Possible root causes\n2. Most likely root cause\n3. Confidence score\n4. Investigation steps\n5. Immediate technical recommendations\n\nReturn ONLY valid JSON.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        352,
+        240
+      ],
+      "id": "ef78a306-f8f0-4a1e-a3c6-e012e0b41aca",
+      "name": "Root Cause Analysis Agent"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an Enterprise Incident Communication Manager.\n\nYour responsibility is to prepare stakeholder communications based on the incident analysis.\n\nUse the following information.\n\nImpact Analysis\n\n{{ $('Impact Analysis Agent').item.json.output }}\n\nRoot Cause Analysis\n\n{{ $('Root Cause Analysis Agent').item.json.output }}\n\nDetermine:\n\n1. Stakeholders to notify\n2. Communication priority\n3. Incident status\n4. Internal communication\n5. Customer communication\n6. Next update time\n\nReturn ONLY valid JSON.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        640,
+        0
+      ],
+      "id": "08bde6c1-769e-45a3-a588-00dcbbf38521",
+      "name": "Communication Agent"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        528,
+        112
+      ],
+      "id": "65f162d9-2c1b-4054-aa12-38e14eff19c3",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        432,
+        32
+      ],
+      "id": "b035df21-7253-488f-8b77-25e3f3df3edb",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        256,
+        416
+      ],
+      "id": "30b2c280-9553-4ded-97c8-7a0b21d85923",
+      "name": "Groq Chat Model2",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        704,
+        192
+      ],
+      "id": "8db59d77-eca0-4d55-bd2a-a5e596fef64e",
+      "name": "Groq Chat Model3",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are the Executive Incident Manager responsible for preparing the final production incident report for enterprise stakeholders.\n\nYou have received the complete analysis from multiple AI specialist agents.\n\nBelow is the complete incident context.\n\n{{ JSON.stringify($json, null, 2) }}\n\nYour responsibility is to prepare a professional executive incident report.\n\nInstructions:\n\n- Use ONLY the information provided.\n- Do NOT invent missing information.\n- Do NOT use placeholders like [Date] or [Impact].\n- If information is unavailable, write \"Not Available\".\n- Write concise but professional responses suitable for Engineering Managers, Directors, CTOs, and Incident Managers.\n\nGenerate the following sections:\n\n1. Incident Overview\n   - Briefly summarize what happened.\n\n2. Business Impact\n   - Describe how customers, users, and business operations were affected.\n\n3. Technical Findings\n   - Summarize the technical observations from the Root Cause Analysis.\n\n4. Root Cause\n   - State the most likely root cause.\n\n5. Immediate Actions\n   - List the actions that should be taken immediately.\n\n6. Recommended Next Steps\n   - Recommend preventive improvements.\n\n7. Executive Summary\n   - Write a concise management summary describing:\n     • What happened\n     • Business impact\n     • Root cause\n     • Current status\n     • Recommended direction\n\nReturn ONLY valid JSON.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        688,
+        304
+      ],
+      "id": "84cac13d-e15f-46e7-899f-f15a63493236",
+      "name": "Executive Summary Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        624,
+        448
+      ],
+      "id": "73d58875-e368-4e1f-91e3-c88939d70e36",
+      "name": "Groq Chat Model4",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"affected_users\": \"string\",\n  \"business_impact\": \"string\",\n  \"operational_impact\": \"string\",\n  \"financial_impact\": \"string\",\n  \"validated_severity\": \"Critical | High | Medium | Low\",\n  \"business_priority\": \"P1 | P2 | P3 | P4\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        512,
+        32
+      ],
+      "id": "cab8f80a-fc67-496e-a8ed-c0aac8740ab4",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"possible_causes\": [\n    \"string\"\n  ],\n  \"most_likely_cause\": \"string\",\n  \"confidence\": 90,\n  \"investigation_steps\": [\n    \"string\"\n  ],\n  \"technical_recommendations\": [\n    \"string\"\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        432,
+        464
+      ],
+      "id": "31d579c8-be51-4f48-bc3d-585d9e39242f",
+      "name": "Structured Output Parser2"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"stakeholders\": [\n    \"Engineering Team\",\n    \"Incident Manager\",\n    \"Product Manager\",\n    \"Customer Support\"\n  ],\n  \"communication_priority\": \"Critical | High | Medium | Low\",\n  \"incident_status\": \"Investigating\",\n  \"internal_message\": \"string\",\n  \"customer_message\": \"string\",\n  \"next_update\": \"30 minutes\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        832,
+        176
+      ],
+      "id": "3f0e5f02-7e75-4578-9539-093a7fd30b86",
+      "name": "Structured Output Parser3"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"incident_overview\": \"Summarize the production incident using the provided incident details.\",\n  \"business_impact\": \"Describe how the incident affected customers, users, business operations, and financial impact.\",\n  \"technical_findings\": \"Summarize the important technical observations from the Root Cause Analysis Agent.\",\n  \"root_cause\": \"State the most likely root cause identified by the Root Cause Analysis Agent.\",\n  \"immediate_actions\": [\n    \"List immediate mitigation actions that should be taken.\"\n  ],\n  \"recommended_next_steps\": [\n    \"List long-term preventive actions and recommendations.\"\n  ],\n  \"executive_summary\": \"Write a concise executive-level summary suitable for Engineering Managers, Directors, CTOs, and Incident Managers.\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        800,
+        480
+      ],
+      "id": "20a3e882-564f-4447-a5d6-2843b610a174",
+      "name": "Structured Output Parser4"
+    },
+    {
+      "parameters": {
+        "jsCode": "const impact = $input.first().json.output;\nconst rca = $input.all()[1].json.output;\n\nreturn [\n  {\n    json: {\n      impact,\n      rca\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        608,
+        -160
+      ],
+      "id": "7f111ed1-0038-43dc-9e8d-6d10a1b2c88c",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "sendTo": "praveenpraveensimhadri@gmail.com ",
+        "subject": "🚨 [HIGH] Production Incident Alert | Authentication Service | Investigation Ongoing",
+        "message": "<!DOCTYPE html> <html> <head> <meta charset=\"UTF-8\"> <title>Production Incident Alert</title> </head>  <body style=\"font-family:Arial,Helvetica,sans-serif;background:#f4f6f9;margin:0;padding:20px;\">  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"> <tr> <td align=\"center\">  <table width=\"700\" cellpadding=\"20\" cellspacing=\"0\" style=\"background:#ffffff;border-radius:10px;border:1px solid #ddd;\">  <tr> <td style=\"background:#d32f2f;color:white;border-radius:10px 10px 0 0;\"> <h2 style=\"margin:0;\">🚨 Production Incident Alert</h2> <p style=\"margin:5px 0 0;\">AI Production War Room</p> </td> </tr>  <tr> <td>  <h3 style=\"color:#1565c0;\">📋 Incident Details</h3>  <table width=\"100%\" cellpadding=\"8\" cellspacing=\"0\" style=\"border-collapse:collapse;\">  <tr> <td><b>Incident Title</b></td> <td>High API Latency in User Authentication Service</td> </tr>  <tr> <td><b>Service</b></td> <td>Authentication Service</td> </tr>  <tr> <td><b>Environment</b></td> <td>Production</td> </tr>  <tr> <td><b>Priority</b></td> <td style=\"color:red;\"><b>HIGH</b></td> </tr>  <tr> <td><b>Status</b></td> <td>Investigation Ongoing</td> </tr>  <tr> <td><b>Next Update</b></td> <td>In 2 Hours</td> </tr>  </table>  <hr>  <h3 style=\"color:#1565c0;\">📖 Incident Overview</h3>  <p> A production issue has been identified affecting the Authentication Service. Engineering teams are actively investigating the incident and working toward service restoration. </p>  <hr>  <h3 style=\"color:#1565c0;\">📊 Business Impact</h3>  <ul>  <li>Customers may experience login failures.</li>  <li>Employees supporting production services may experience operational delays.</li>  <li>Business operations are being monitored closely.</li>  <li>Shareholders have been identified as impacted stakeholders.</li>  </ul>  <hr>  <h3 style=\"color:#1565c0;\">🔍 Technical Findings</h3>  <ul>  <li>Technical investigation is currently in progress.</li>  <li>Engineering teams are collecting additional diagnostic information.</li>  <li>Root cause has not yet been confirmed.</li>  <li><b>Status:</b> Under Investigation</li>  </ul>  <hr>  <h3 style=\"color:#1565c0;\">⚡ Immediate Actions</h3>  <ul>  <li>Investigate the underlying root cause.</li>  <li>Continue technical troubleshooting.</li>  <li>Monitor production systems for additional anomalies.</li>  <li>Coordinate with engineering teams until service stability is restored.</li>  </ul>  <hr>  <h3 style=\"color:#1565c0;\">✅ Recommended Next Steps</h3>  <ul>  <li>Conduct a detailed post-incident review.</li>  <li>Implement preventive measures.</li>  <li>Validate system stability after resolution.</li>  <li>Improve monitoring and alerting capabilities.</li>  </ul>  <hr>  <h3 style=\"color:#1565c0;\">👥 Stakeholders Notified</h3>  <ul>  <li>Customers</li>  <li>Employees</li>  <li>Shareholders</li>  </ul>  <hr>  <h3 style=\"color:#1565c0;\">📑 Executive Summary</h3>  <p> A high-priority production incident is currently impacting the Authentication Service. Engineering teams are actively investigating the issue to determine the root cause while executing mitigation activities and continuously monitoring production health. Additional updates will be communicated as new findings become available. </p>  <hr>  <p style=\"font-size:13px;color:#666;\"> This notification was automatically generated by the <b>AI Production War Room - Incident Management Platform</b>. </p>  </td> </tr>  </table>  </td> </tr> </table>  </body> </html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        304
+      ],
+      "id": "1759e3d6-bbba-4657-bcaf-0eaa83bf547a",
+      "name": "Send a message",
+      "webhookId": "81605844-0938-4caa-a663-2a92285870dc",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "VCmlqbkPlbuPFcrh",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Incident Commander Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Incident Commander Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Incident Commander Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Incident Commander Agent": {
+      "main": [
+        [
+          {
+            "node": "Impact Analysis Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Root Cause Analysis Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Impact Analysis Agent": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Root Cause Analysis Agent": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Communication Agent": {
+      "main": [
+        [
+          {
+            "node": "Executive Summary Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Impact Analysis Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Root Cause Analysis Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Communication Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Executive Summary Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Impact Analysis Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser2": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Root Cause Analysis Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser3": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Communication Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser4": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Executive Summary Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Communication Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Executive Summary Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "00a0a020-7997-4b02-8ccd-49268bfcda88",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "55de7f674ab58be8b0c2e83bd116a8a2074ec94d79f4953c2a8575f410e1943d"
+  },
+  "id": "idaAoidvKhL1C17j",
+  "tags": []
+}
