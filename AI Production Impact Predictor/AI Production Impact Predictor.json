@@ -1,0 +1,549 @@
+{
+  "name": "AI Production Impact Predictor",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ac41bbfa-cda6-4ba4-b826-9d3295f3982a",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "repository",
+        "operation": "getPullRequests",
+        "owner": {
+          "__rl": true,
+          "value": "praveenchapala",
+          "mode": "list",
+          "cachedResultName": "praveenchapala",
+          "cachedResultUrl": "https://github.com/praveenchapala"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "api-learning-journey",
+          "mode": "list",
+          "cachedResultName": "api-learning-journey",
+          "cachedResultUrl": "https://github.com/praveenchapala/api-learning-journey"
+        },
+        "getRepositoryPullRequestsFilters": {
+          "state": "all"
+        }
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        176,
+        0
+      ],
+      "id": "8c478293-2be2-4e72-b006-23395fe78879",
+      "name": "Get pull requests of a repository",
+      "webhookId": "fbb91164-923c-4689-9f2f-9ea05d3d6c79",
+      "credentials": {
+        "githubApi": {
+          "id": "WSo0wT2i7MFv9Is5",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Software Engineer responsible for analyzing Pull Requests.\n\nAnalyze the following Pull Request.\n\nFile:\n{{ $json.filename }}\n\nStatus:\n{{ $json.status }}\n\nAdditions:\n{{ $json.additions }}\n\nDeletions:\n{{ $json.deletions }}\n\nPatch:\n{{ $json.patch }}\n\nInstructions:\n\n1. Determine the type of change:\n   - Documentation\n   - Bug Fix\n   - Feature\n   - Refactoring\n   - Configuration\n   - Dependency Update\n   - Test Update\n   - Database Change\n   - API Change\n\n2. Identify the module or service affected.\n\n3. Estimate the complexity:\n   - Low\n   - Medium\n   - High\n\n4. Estimate the review effort:\n   - 5 minutes\n   - 15 minutes\n   - 30 minutes\n   - 1 hour\n   - More than 1 hour\n\n5. Provide a short summary of what changed.\n\nRespond only in the required JSON format.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "e02ad9fd-5a7e-43f1-a9df-370ce80672a7",
+      "name": "PR Analyzer Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        368,
+        160
+      ],
+      "id": "839c2722-657b-474d-b5b5-8d9dd8092be8",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"files_modified\": [\n    \"string\"\n  ],\n  \"change_type\": \"string\",\n  \"complexity\": \"string\",\n  \"modules_affected\": [\n    \"string\"\n  ],\n  \"estimated_review_effort\": \"string\",\n  \"summary\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        512,
+        192
+      ],
+      "id": "52294a7a-4948-4c43-abd0-c3a214e5d824",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/{{$json.base.repo.owner.login}}/{{$json.base.repo.name}}/pulls/{{$json.number}}/files",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        320,
+        0
+      ],
+      "id": "17d0b858-8bb7-4998-812c-980aabf113e3",
+      "name": "Get PR Files"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Software Architect responsible for assessing the impact of Pull Requests.\n\nYou have received the following PR analysis:\n\nFiles Modified:\n{{ JSON.stringify($json.output.files_modified) }}\n\nChange Type:\n{{ $json.output.change_type }}\n\nModules Affected:\n{{ JSON.stringify($json.output.modules_affected) }}\n\nComplexity:\n{{ $json.output.complexity }}\n\nSummary:\n{{ $json.output.summary }}\n\nDetermine:\n\n1. Which services may be affected.\n2. Whether end users are affected.\n3. Whether testing is required.\n4. Whether rollback preparation is required.\n5. Business impact.\n6. Deployment risk.\n\nRespond only in the required JSON format.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        704,
+        0
+      ],
+      "id": "37fa4826-5627-4bd5-8853-1196b509c856",
+      "name": "Change Impact Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        688,
+        240
+      ],
+      "id": "9604ce8f-f224-45b2-9ed3-20dc7ccd2355",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"affected_services\": [\n    \"string\"\n  ],\n  \"affected_users\": \"string\",\n  \"deployment_risk\": \"string\",\n  \"testing_required\": \"string\",\n  \"rollback_required\": \"string\",\n  \"business_impact\": \"string\",\n  \"recommendation\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        880,
+        208
+      ],
+      "id": "9184b61b-2a66-4d55-9d2a-8084f7152798",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Principal Site Reliability Engineer (SRE) responsible for performing Production Change Risk Assessments.\n\nYou have received the following Pull Request impact analysis.\n\nFiles Modified:\n{{ JSON.stringify($json.output.files_modified) }}\n\nChange Type:\n{{ $json.output.change_type }}\n\nModules Affected:\n{{ JSON.stringify($json.output.modules_affected) }}\n\nComplexity:\n{{ $json.output.complexity }}\n\nSummary:\n{{ $json.output.summary }}\n\nAffected Services:\n{{ JSON.stringify($json.output.affected_services) }}\n\nAffected Users:\n{{ $json.output.affected_users }}\n\nDeployment Risk:\n{{ $json.output.deployment_risk }}\n\nBusiness Impact:\n{{ $json.output.business_impact }}\n\nTesting Required:\n{{ $json.output.testing_required }}\n\nRollback Required:\n{{ $json.output.rollback_required }}\n\nAs an experienced SRE, predict:\n\n1. Overall production risk.\n2. Probability of incident occurrence.\n3. Probability of deployment failure.\n4. Probability of rollback.\n5. Severity if the change fails.\n6. Services that are most likely to fail.\n7. Users who could be impacted.\n8. Business consequences.\n9. Recommended deployment strategy.\n10. Monitoring recommendations.\n11. Final recommendation.\n\nRisk Levels:\n- Low\n- Medium\n- High\n- Critical\n\nDeployment Strategies:\n- Normal Deployment\n- Blue-Green Deployment\n- Canary Deployment\n- Phased Rollout\n- Immediate Rollback Required\n\nRespond ONLY in the required JSON format.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        992,
+        0
+      ],
+      "id": "f52a55a6-e8e3-4fdd-b83f-6849130054d5",
+      "name": "Production Risk Predictor Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        976,
+        192
+      ],
+      "id": "dab1f17d-7dcb-4a07-a364-2054c41c0f82",
+      "name": "Groq Chat Model2",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"production_risk\": \"string\",\n  \"incident_probability\": \"string\",\n  \"deployment_failure_probability\": \"string\",\n  \"rollback_probability\": \"string\",\n  \"severity\": \"string\",\n  \"likely_failed_services\": [\n    \"string\"\n  ],\n  \"affected_users\": \"string\",\n  \"business_impact\": \"string\",\n  \"deployment_strategy\": \"string\",\n  \"monitoring_recommendations\": [\n    \"string\"\n  ],\n  \"final_recommendation\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1136,
+        176
+      ],
+      "id": "7370f893-9244-4c44-b212-cc47dc5cc75f",
+      "name": "Structured Output Parser2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Principal Site Reliability Engineer.\n\nYou have received the following production risk assessment.\n\nProduction Risk:\n{{ $json.output.production_risk }}\n\nIncident Probability:\n{{ $json.output.incident_probability }}\n\nDeployment Failure Probability:\n{{ $json.output.deployment_failure_probability }}\n\nRollback Probability:\n{{ $json.output.rollback_probability }}\n\nSeverity:\n{{ $json.output.severity }}\n\nLikely Failed Services:\n{{ JSON.stringify($json.output.likely_failed_services) }}\n\nAffected Users:\n{{ $json.output.affected_users }}\n\nBusiness Impact:\n{{ $json.output.business_impact }}\n\nDeployment Strategy:\n{{ $json.output.deployment_strategy }}\n\nPredict:\n\n1. Possible production incident.\n2. Severity level.\n3. Symptoms users may experience.\n4. Metrics that should be monitored.\n5. Logs that should be investigated.\n6. Recovery plan.\n7. Rollback strategy.\n8. Estimated recovery time.\n\nRespond only in the required JSON format.\nImportant Rules:\n\n1. If the PR only contains documentation changes, README changes, comments, or non-executable files, then:\n   - No production incident should be predicted.\n   - No rollback is required.\n   - No services are impacted.\n\n2. Only predict incidents when executable code, configuration, infrastructure, database, or API files are modified.\n\n3. Never invent incidents that are not supported by the provided PR data.\n\nRespond conservatively and avoid false positives.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1264,
+        0
+      ],
+      "id": "55fbbff7-8680-47c0-92ea-e727e9961ac8",
+      "name": "Incident Simulator Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1296,
+        208
+      ],
+      "id": "6738113e-b8c1-4714-b614-2e42705207ed",
+      "name": "Groq Chat Model3",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"possible_incident\": \"string\",\n  \"severity\": \"string\",\n  \"user_symptoms\": [\n    \"string\"\n  ],\n  \"metrics_to_monitor\": [\n    \"string\"\n  ],\n  \"logs_to_investigate\": [\n    \"string\"\n  ],\n  \"recovery_plan\": [\n    \"string\"\n  ],\n  \"rollback_strategy\": \"string\",\n  \"estimated_recovery_time\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1424,
+        176
+      ],
+      "id": "029d2eab-f81f-4d02-9845-0121457d3aa5",
+      "name": "Structured Output Parser3"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Principal Engineering Manager.\n\nPrepare an executive production impact report using the following information.\n\nPR Analysis:\n{{ JSON.stringify($('PR Analyzer Agent').item.json.output) }}\n\nChange Impact:\n{{ JSON.stringify($('Change Impact Agent').item.json.output) }}\n\nProduction Risk:\n{{ JSON.stringify($('Production Risk Predictor Agent').item.json.output) }}\n\nIncident Simulation:\n{{ JSON.stringify($('Incident Simulator Agent').item.json.output) }}\n\nGenerate:\n\n1. Executive Summary\n2. Change Summary\n3. Risk Assessment\n4. Production Impact\n5. Possible Incident\n6. Recommended Deployment Strategy\n7. Final Decision\n8. Action Items\n\nRespond only in JSON.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        704,
+        368
+      ],
+      "id": "19752a04-e9fe-48b0-89a6-9848f2f9c5a4",
+      "name": "Executive Investigation Report Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        704,
+        560
+      ],
+      "id": "2338a34c-d8a4-4b66-8216-b535bc93e195",
+      "name": "Groq Chat Model4",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"executive_summary\": \"string\",\n  \"change_summary\": \"string\",\n  \"risk_assessment\": \"string\",\n  \"production_impact\": \"string\",\n  \"possible_incident\": \"string\",\n  \"deployment_strategy\": \"string\",\n  \"final_decision\": \"string\",\n  \"action_items\": [\n    \"string\"\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        880,
+        576
+      ],
+      "id": "2b03e9c6-86fc-4ff7-9fee-f0a17d75cfe1",
+      "name": "Structured Output Parser4"
+    },
+    {
+      "parameters": {
+        "sendTo": "praveenpraveensimhadri@gmail.com ",
+        "subject": "=🚀 AI Production Impact Assessment Report | PR #{{$('Get pull requests of a repository').item.json.number}} | {{$('Get pull requests of a repository').item.json.title}}",
+        "message": "=<!DOCTYPE html>\n\n<html>\n<head>\n<style>\nbody{\n    font-family: Arial, sans-serif;\n    background:#f5f7fb;\n    margin:0;\n    padding:30px;\n}\n.container{\n    max-width:900px;\n    margin:auto;\n    background:#ffffff;\n    border-radius:16px;\n    overflow:hidden;\n    box-shadow:0 4px 20px rgba(0,0,0,0.08);\n}\n.header{\n    background:#0f172a;\n    color:white;\n    padding:30px;\n}\n.header h1{\n    margin:0;\n    font-size:28px;\n}\n.header p{\n    margin-top:8px;\n    color:#cbd5e1;\n}\n\n.cards{\ndisplay:flex;\ngap:15px;\npadding:20px;\n}\n\n.card{\nflex:1;\nbackground:#f8fafc;\nborder-radius:12px;\npadding:20px;\ntext-align:center;\n}\n\n.card h3{\nmargin:0;\ncolor:#64748b;\nfont-size:14px;\n}\n\n.card p{\nmargin-top:10px;\nfont-size:22px;\nfont-weight:bold;\n}\n\n.section{\npadding:0 25px 25px 25px;\n}\n\n.section h2{\ncolor:#0f172a;\nfont-size:18px;\nborder-bottom:2px solid #e2e8f0;\npadding-bottom:10px;\n}\n\ntable{\nwidth:100%;\nborder-collapse:collapse;\nmargin-top:15px;\n}\n\nth{\nwidth:35%;\nbackground:#f8fafc;\ntext-align:left;\npadding:12px;\nborder-bottom:1px solid #e2e8f0;\n}\n\ntd{\npadding:12px;\nborder-bottom:1px solid #e2e8f0;\n}\n\n.badge-low{\nbackground:#dcfce7;\ncolor:#166534;\npadding:8px 14px;\nborder-radius:20px;\nfont-weight:bold;\n}\n\n.badge-medium{\nbackground:#fef3c7;\ncolor:#92400e;\npadding:8px 14px;\nborder-radius:20px;\nfont-weight:bold;\n}\n\n.badge-high{\nbackground:#fee2e2;\ncolor:#991b1b;\npadding:8px 14px;\nborder-radius:20px;\nfont-weight:bold;\n}\n\n.footer{\nbackground:#f8fafc;\npadding:20px;\ntext-align:center;\ncolor:#64748b;\nfont-size:13px;\n} </style>\n\n</head>\n\n<body>\n\n<div class=\"container\">\n\n<div class=\"header\">\n<h1>🚀 AI Production Impact Assessment</h1>\n<p>Automated Change Risk Assessment Report</p>\n</div>\n\n<div class=\"cards\">\n\n<div class=\"card\">\n<h3>PR Number</h3>\n<p>#{{$('Get pull requests of a repository').item.json.number}}</p>\n</div>\n\n<div class=\"card\">\n<h3>Author</h3>\n<p>{{$('Get pull requests of a repository').item.json.user.login}}</p>\n</div>\n\n<div class=\"card\">\n<h3>Risk Level</h3>\n<p>\n<span class=\"badge-low\">\n{{$('Production Risk Predictor Agent').item.json.output.production_risk}}\n</span>\n</p>\n</div>\n\n</div>\n\n<div class=\"section\">\n<h2>Pull Request Details</h2>\n\n<table>\n<tr>\n<th>Title</th>\n<td>{{$('Get pull requests of a repository').item.json.title}}</td>\n</tr>\n\n<tr>\n<th>Repository</th>\n<td>{{$('Get pull requests of a repository').item.json.base.repo.name}}</td>\n</tr>\n\n<tr>\n<th>Change Type</th>\n<td>{{$('PR Analyzer Agent').item.json.output.change_type}}</td>\n</tr>\n\n<tr>\n<th>Modules Affected</th>\n<td>{{ JSON.stringify($('PR Analyzer Agent').item.json.output.modules_affected) }}</td>\n</tr>\n\n<tr>\n<th>Complexity</th>\n<td>{{$('PR Analyzer Agent').item.json.output.complexity}}</td>\n</tr>\n</table>\n</div>\n\n<div class=\"section\">\n<h2>Production Risk Assessment</h2>\n\n<table>\n<tr>\n<th>Incident Probability</th>\n<td>{{$('Production Risk Predictor Agent').item.json.output.incident_probability}}</td>\n</tr>\n\n<tr>\n<th>Deployment Failure Probability</th>\n<td>{{$('Production Risk Predictor Agent').item.json.output.deployment_failure_probability}}</td>\n</tr>\n\n<tr>\n<th>Rollback Probability</th>\n<td>{{$('Production Risk Predictor Agent').item.json.output.rollback_probability}}</td>\n</tr>\n\n<tr>\n<th>Deployment Strategy</th>\n<td>{{$('Production Risk Predictor Agent').item.json.output.deployment_strategy}}</td>\n</tr>\n\n<tr>\n<th>Recommendation</th>\n<td>{{$('Production Risk Predictor Agent').item.json.output.final_recommendation}}</td>\n</tr>\n</table>\n</div>\n\n<div class=\"section\">\n<h2>Potential Incident Simulation</h2>\n\n<table>\n<tr>\n<th>Possible Incident</th>\n<td>{{$('Incident Simulator Agent').item.json.output.possible_incident}}</td>\n</tr>\n\n<tr>\n<th>Recovery Time</th>\n<td>{{$('Incident Simulator Agent').item.json.output.estimated_recovery_time}}</td>\n</tr>\n\n<tr>\n<th>Rollback Strategy</th>\n<td>{{$('Incident Simulator Agent').item.json.output.rollback_strategy}}</td>\n</tr>\n</table>\n</div>\n\n<div class=\"section\">\n<h2>Executive Summary</h2>\n\n<p>\n{{$('Executive Investigation Report Agent').item.json.output.executive_summary}}\n</p>\n\n<p>\n<b>Final Decision:</b>\n{{$('Executive Investigation Report Agent').item.json.output.final_decision}}\n</p>\n</div>\n\n<div class=\"footer\">\nGenerated automatically by AI Production Impact Predictor\n</div>\n\n</div>\n\n</body>\n</html>\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1056,
+        368
+      ],
+      "id": "8cdaa220-baa5-4293-9690-58d3cca70ea0",
+      "name": "Send a message",
+      "webhookId": "cadc6429-9b6a-4bd3-af2b-e4db9c600f7b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "VCmlqbkPlbuPFcrh",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get pull requests of a repository",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get pull requests of a repository": {
+      "main": [
+        [
+          {
+            "node": "Get PR Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "PR Analyzer Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "PR Analyzer Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get PR Files": {
+      "main": [
+        [
+          {
+            "node": "PR Analyzer Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PR Analyzer Agent": {
+      "main": [
+        [
+          {
+            "node": "Change Impact Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Change Impact Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Change Impact Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Change Impact Agent": {
+      "main": [
+        [
+          {
+            "node": "Production Risk Predictor Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Production Risk Predictor Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser2": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Production Risk Predictor Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Production Risk Predictor Agent": {
+      "main": [
+        [
+          {
+            "node": "Incident Simulator Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Incident Simulator Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser3": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Incident Simulator Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Incident Simulator Agent": {
+      "main": [
+        [
+          {
+            "node": "Executive Investigation Report Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Executive Investigation Report Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser4": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Executive Investigation Report Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Executive Investigation Report Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "e6559e6f-309b-4c10-80ea-1dad0fb8eb75",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "55de7f674ab58be8b0c2e83bd116a8a2074ec94d79f4953c2a8575f410e1943d"
+  },
+  "id": "bEL73T3iH5IGBSIs",
+  "tags": []
+}
