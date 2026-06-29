@@ -1,0 +1,885 @@
+{
+  "name": "AI Developer Productivity Analytics System",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -368,
+        -32
+      ],
+      "id": "6ec05976-c155-49f8-a6cf-69cb0385cc0a",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "resource": "repository",
+        "operation": "getPullRequests",
+        "owner": {
+          "__rl": true,
+          "value": "praveenchapala",
+          "mode": "list",
+          "cachedResultName": "praveenchapala",
+          "cachedResultUrl": "https://github.com/praveenchapala"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "api-learning-journey",
+          "mode": "list",
+          "cachedResultName": "api-learning-journey",
+          "cachedResultUrl": "https://github.com/praveenchapala/api-learning-journey"
+        },
+        "limit": 100,
+        "getRepositoryPullRequestsFilters": {
+          "state": "all"
+        }
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        -304,
+        176
+      ],
+      "id": "a2f4d5e3-c3af-4af0-baa4-947eb1880921",
+      "name": "Get pull requests of a repository",
+      "webhookId": "7f35b9fa-717b-4277-9f46-22b974da96cb",
+      "credentials": {
+        "githubApi": {
+          "id": "WSo0wT2i7MFv9Is5",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const prs = $input.all();\n\nreturn prs.map(pr => {\n  const created = new Date(pr.json.created_at);\n  const merged = pr.json.merged_at\n    ? new Date(pr.json.merged_at)\n    : new Date();\n\n  const cycleTimeMinutes =\n    (merged - created) / (1000 * 60);\n\n  return {\n    json: {\n      title: pr.json.title,\n      author: pr.json.user.login,\n      state: pr.json.state,\n      repository: pr.json.base.repo.name,\n      created_at: pr.json.created_at,\n      merged_at: pr.json.merged_at,\n      cycle_time_minutes: Math.round(cycleTimeMinutes),\n      cycle_time_hours:\n        (cycleTimeMinutes / 60).toFixed(2)\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        -32
+      ],
+      "id": "13670332-4804-4b64-b509-a5190f463b26",
+      "name": "Caluclate Metrics"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Pull Request Analytics Engineer.\n\nAnalyze the following pull request metrics.\n\nPR Title:\n{{ $json.title }}\n\nRepository:\n{{ $json.repository }}\n\nAuthor:\n{{ $json.author }}\n\nCycle Time:\n{{ $json.cycle_time_minutes }} minutes\n\nGenerate:\n\n1. PR Health\n2. Review Efficiency\n3. Merge Efficiency\n4. Delivery Assessment\n5. Key Observations\n6. Risk Assessment\n7. Recommendations\n\nReturn JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -336,
+        400
+      ],
+      "id": "1ba3ffd5-c3fc-48de-aa53-41171f13cff2",
+      "name": "PR Analytics Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -336,
+        592
+      ],
+      "id": "429d37d5-ef2c-4e79-b304-249ef9d42fd5",
+      "name": "Groq Chat Model2",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"pr_health\": \"\",\n  \"review_efficiency\": \"\",\n  \"merge_efficiency\": \"\",\n  \"delivery_assessment\": \"\",\n  \"key_observations\": [],\n  \"risk_assessment\": \"\",\n  \"recommendations\": []\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -160,
+        592
+      ],
+      "id": "52845fe6-a53f-4748-bdc2-3b182983024a",
+      "name": "Structured Output Parser2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Engineering Productivity Consultant.\n\nAnalyze the following information.\n\nPR Health:\n{{ $json.output.pr_health }}\n\nReview Efficiency:\n{{ $json.output.review_efficiency }}\n\nMerge Efficiency:\n{{ $json.output.merge_efficiency }}\n\nDelivery Assessment:\n{{ $json.output.delivery_assessment }}\n\nKey Observations:\n{{ $json.output.key_observations }}\n\nRisk Assessment:\n{{ $json.output.risk_assessment }}\n\nRecommendations:\n{{ $json.output.recommendations }}\n\nGenerate:\n\n1. Productivity Score\n2. Developer Efficiency\n3. Delivery Consistency\n4. Collaboration Score\n5. Strengths\n6. Areas for Improvement\n7. Performance Risk\n8. Manager Summary\n\nReturn JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -128,
+        160
+      ],
+      "id": "00d946ee-5bf6-4a11-90db-c831e3fe34c7",
+      "name": "Developer Performance Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        336
+      ],
+      "id": "8817f6f1-4fc3-48a5-8d9e-aa89c85ef410",
+      "name": "Groq Chat Model3",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"productivity_score\": \"\",\n  \"developer_efficiency\": \"\",\n  \"delivery_consistency\": \"\",\n  \"collaboration_score\": \"\",\n  \"strengths\": [],\n  \"areas_for_improvement\": [],\n  \"performance_risk\": \"\",\n  \"manager_summary\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        48,
+        320
+      ],
+      "id": "7e8ee074-d8e6-428a-af31-c52e787a1486",
+      "name": "Structured Output Parser3"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Engineering Operations Consultant.\n\nAnalyze the following developer productivity report.\n\nProductivity Score:\n{{ $json.output.productivity_score }}\n\nDeveloper Efficiency:\n{{ $json.output.developer_efficiency }}\n\nDelivery Consistency:\n{{ $json.output.delivery_consistency }}\n\nCollaboration Score:\n{{ $json.output.collaboration_score }}\n\nStrengths:\n{{ $json.output.strengths }}\n\nAreas for Improvement:\n{{ $json.output.areas_for_improvement }}\n\nPerformance Risk:\n{{ $json.output.performance_risk }}\n\nManager Summary:\n{{ $json.output.manager_summary }}\n\nIdentify:\n\n1. Delivery Bottlenecks\n2. Process Bottlenecks\n3. Collaboration Bottlenecks\n4. Severity Level\n5. Root Causes\n6. Immediate Recommendations\n7. Long-Term Improvements\n\nReturn JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -48,
+        -32
+      ],
+      "id": "3b9a3d39-4c23-4cf8-b28b-766c7420f79e",
+      "name": "Bottleneck Detection Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        176,
+        160
+      ],
+      "id": "5d38d70b-6220-415e-8f80-07b63aa73c8d",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"delivery_bottlenecks\": [],\n  \"process_bottlenecks\": [],\n  \"collaboration_bottlenecks\": [],\n  \"severity_level\": \"\",\n  \"root_causes\": [],\n  \"immediate_recommendations\": [],\n  \"long_term_improvements\": []\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        272,
+        144
+      ],
+      "id": "1f9491cc-6e8b-4f0b-880e-fd2826b122e2",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Engineering Delivery Risk Analyst.\n\nAnalyze the following engineering information and predict future delivery risks.\n\nDeveloper Productivity Score:\n{{ $('Developer Performance Agent').item.json.output.productivity_score }}\n\nDeveloper Efficiency:\n{{ $('Developer Performance Agent').item.json.output.developer_efficiency }}\n\nDelivery Consistency:\n{{ $('Developer Performance Agent').item.json.output.delivery_consistency }}\n\nCollaboration Score:\n{{ $('Developer Performance Agent').item.json.output.collaboration_score }}\n\nPerformance Risk:\n{{ $('Developer Performance Agent').item.json.output.performance_risk }}\n\nDelivery Bottlenecks:\n{{ $('Bottleneck Detection Agent').item.json.output.delivery_bottlenecks }}\n\nProcess Bottlenecks:\n{{ $('Bottleneck Detection Agent').item.json.output.process_bottlenecks }}\n\nCollaboration Bottlenecks:\n{{ $('Bottleneck Detection Agent').item.json.output.collaboration_bottlenecks }}\n\nSeverity Level:\n{{ $('Bottleneck Detection Agent').item.json.output.severity_level }}\n\nRoot Causes:\n{{ $('Bottleneck Detection Agent').item.json.output.root_causes }}\n\nImmediate Recommendations:\n{{ $('Bottleneck Detection Agent').item.json.output.immediate_recommendations }}\n\nLong Term Improvements:\n{{ $('Bottleneck Detection Agent').item.json.output.long_term_improvements }}\n\nPredict:\n\n1. Sprint Delay Probability\n2. Deployment Failure Probability\n3. Production Incident Probability\n4. Delivery Risk Level\n5. Business Impact\n6. Predicted Issues\n7. Risk Drivers\n8. Preventive Actions\n9. Leadership Recommendation\n10. Overall Delivery Confidence\n\nReturn JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        0,
+        480
+      ],
+      "id": "ad4fd46b-b7a2-443e-8476-2dd897e9d07f",
+      "name": "Delivery Risk Prediction Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        32,
+        656
+      ],
+      "id": "4bf43e87-1c54-4c21-b1d7-aaef009d8b05",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"sprint_delay_probability\": \"\",\n  \"deployment_failure_probability\": \"\",\n  \"production_incident_probability\": \"\",\n  \"delivery_risk_level\": \"\",\n  \"business_impact\": \"\",\n  \"predicted_issues\": [],\n  \"risk_drivers\": [],\n  \"preventive_actions\": [],\n  \"leadership_recommendation\": \"\",\n  \"overall_delivery_confidence\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        176,
+        640
+      ],
+      "id": "22c202b2-985c-40bc-973c-34d2ea2556ae",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a VP of Engineering responsible for assessing the overall health of the engineering organization.\n\nAnalyze the following information.\n\nSprint Delay Probability:\n{{ $json.output.sprint_delay_probability }}\n\nDeployment Failure Probability:\n{{ $json.output.deployment_failure_probability }}\n\nProduction Incident Probability:\n{{ $json.output.production_incident_probability }}\n\nDelivery Risk Level:\n{{ $json.output.delivery_risk_level }}\n\nBusiness Impact:\n{{ $json.output.business_impact }}\n\nPredicted Issues:\n{{ $json.output.predicted_issues }}\n\nRisk Drivers:\n{{ $json.output.risk_drivers }}\n\nPreventive Actions:\n{{ $json.output.preventive_actions }}\n\nLeadership Recommendation:\n{{ $json.output.leadership_recommendation }}\n\nOverall Delivery Confidence:\n{{ $json.output.overall_delivery_confidence }}\n\nGenerate:\n\n1. Engineering Health Score (0-100)\n2. Engineering Health Status\n3. Delivery Health\n4. Operational Health\n5. Team Health\n6. Key Concerns\n7. Positive Indicators\n8. Executive Summary\n9. Leadership Actions\n10. Business Readiness\n\nReturn JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        192,
+        304
+      ],
+      "id": "8aeb2a32-870e-413f-8d83-1f4f633b5d1a",
+      "name": "Engineering Health Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        336,
+        512
+      ],
+      "id": "abaa2781-6d54-4ecd-a16d-09ff0585c69c",
+      "name": "Groq Chat Model4",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"engineering_health_score\": \"\",\n  \"engineering_health_status\": \"\",\n  \"delivery_health\": \"\",\n  \"operational_health\": \"\",\n  \"team_health\": \"\",\n  \"key_concerns\": [],\n  \"positive_indicators\": [],\n  \"executive_summary\": \"\",\n  \"leadership_actions\": [],\n  \"business_readiness\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        464,
+        480
+      ],
+      "id": "713b8f4d-d34a-48fe-bb60-5b8d2e80fd64",
+      "name": "Structured Output Parser4"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Principal Engineering Consultant.\n\nAnalyze the following engineering health report.\n\nEngineering Health Score:\n{{ $json.output.engineering_health_score }}\n\nEngineering Health Status:\n{{ $json.output.engineering_health_status }}\n\nDelivery Health:\n{{ $json.output.delivery_health }}\n\nOperational Health:\n{{ $json.output.operational_health }}\n\nTeam Health:\n{{ $json.output.team_health }}\n\nKey Concerns:\n{{ $json.output.key_concerns }}\n\nPositive Indicators:\n{{ $json.output.positive_indicators }}\n\nExecutive Summary:\n{{ $json.output.executive_summary }}\n\nLeadership Actions:\n{{ $json.output.leadership_actions }}\n\nBusiness Readiness:\n{{ $json.output.business_readiness }}\n\nGenerate:\n\n1. Immediate Actions\n2. Short Term Recommendations\n3. Long Term Strategic Recommendations\n4. Risk Mitigation Plan\n5. Process Improvements\n6. Engineering Investments\n7. Leadership Priorities\n8. Expected Business Benefits\n9. Final Recommendation\n\nReturn JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        352,
+        0
+      ],
+      "id": "17e9c8f3-f967-4025-a43b-a9cb8d52d159",
+      "name": "Recommendation Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        432,
+        208
+      ],
+      "id": "4ebe1e46-5306-4f10-97e1-1dff31adb624",
+      "name": "Groq Chat Model5",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"immediate_actions\": [],\n  \"short_term_recommendations\": [],\n  \"long_term_recommendations\": [],\n  \"risk_mitigation_plan\": [],\n  \"process_improvements\": [],\n  \"engineering_investments\": [],\n  \"leadership_priorities\": [],\n  \"expected_business_benefits\": [],\n  \"final_recommendation\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        560,
+        176
+      ],
+      "id": "e807a3e4-4649-49d2-adc2-876e2e255a79",
+      "name": "Structured Output Parser5"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a VP of Engineering preparing a report for executive leadership.\n\nAnalyze the following recommendations.\n\nImmediate Actions:\n{{ $json.output.immediate_actions }}\n\nShort Term Recommendations:\n{{ $json.output.short_term_recommendations }}\n\nLong Term Recommendations:\n{{ $json.output.long_term_recommendations }}\n\nRisk Mitigation Plan:\n{{ $json.output.risk_mitigation_plan }}\n\nProcess Improvements:\n{{ $json.output.process_improvements }}\n\nEngineering Investments:\n{{ $json.output.engineering_investments }}\n\nLeadership Priorities:\n{{ $json.output.leadership_priorities }}\n\nExpected Business Benefits:\n{{ $json.output.expected_business_benefits }}\n\nFinal Recommendation:\n{{ $json.output.final_recommendation }}\n\nGenerate:\n\n1. Executive Summary\n2. Engineering Status\n3. Top Risks\n4. Leadership Priorities\n5. Business Impact\n6. Strategic Initiatives\n7. Final Decision\n8. Next Steps\n\nReturn JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        512,
+        320
+      ],
+      "id": "d4f6b956-1737-4947-8a49-cccf91e5736a",
+      "name": "Executive Report Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        624,
+        544
+      ],
+      "id": "16541671-cde9-4025-b896-c3735df80a6b",
+      "name": "Groq Chat Model6",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"executive_summary\": \"\",\n  \"engineering_status\": \"\",\n  \"top_risks\": [],\n  \"leadership_priorities\": [],\n  \"business_impact\": \"\",\n  \"strategic_initiatives\": [],\n  \"final_decision\": \"\",\n  \"next_steps\": []\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        752,
+        560
+      ],
+      "id": "e4b3dc10-2371-4766-b61e-685eb341c230",
+      "name": "Structured Output Parser6"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Engineering Analytics Consultant responsible for identifying trends in engineering performance.\n\nAnalyze the following executive engineering report.\n\nExecutive Summary:\n{{ $('Executive Report Agent').item.json.output.executive_summary }}\n\nEngineering Status:\n{{ $('Executive Report Agent').item.json.output.engineering_status }}\n\nTop Risks:\n{{ $('Executive Report Agent').item.json.output.top_risks }}\n\nLeadership Priorities:\n{{ $('Executive Report Agent').item.json.output.leadership_priorities }}\n\nBusiness Impact:\n{{ $('Executive Report Agent').item.json.output.business_impact }}\n\nStrategic Initiatives:\n{{ $('Executive Report Agent').item.json.output.strategic_initiatives }}\n\nFinal Decision:\n{{ $('Executive Report Agent').item.json.output.final_decision }}\n\nNext Steps:\n{{ $('Executive Report Agent').item.json.output.next_steps }}\n\nIdentify:\n\n1. Productivity Trend\n2. Delivery Trend\n3. Risk Trend\n4. Engineering Health Trend\n5. Emerging Concerns\n6. Positive Trends\n7. Forecast for the next 30 days\n8. Forecast for the next 90 days\n9. Leadership Recommendations\n10. Areas Requiring Attention\n\nReturn JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        688,
+        0
+      ],
+      "id": "bd3eaff8-f08c-4c50-aa90-d81dfe95e689",
+      "name": "Trend Analysis Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        720,
+        176
+      ],
+      "id": "8af1ec34-a986-48aa-b42a-50abe71ddeeb",
+      "name": "Groq Chat Model7",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"productivity_trend\": \"\",\n  \"delivery_trend\": \"\",\n  \"risk_trend\": \"\",\n  \"engineering_health_trend\": \"\",\n  \"emerging_concerns\": [],\n  \"positive_trends\": [],\n  \"forecast_30_days\": \"\",\n  \"forecast_90_days\": \"\",\n  \"leadership_recommendations\": [],\n  \"areas_requiring_attention\": []\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        864,
+        208
+      ],
+      "id": "cd261d08-23b3-4a43-a1a7-e62cce5284ea",
+      "name": "Structured Output Parser7"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an Engineering Intelligence Dashboard Manager.\n\nCreate a dashboard summary using the following information.\n\nProductivity Trend:\n{{ $json.output.productivity_trend }}\n\nDelivery Trend:\n{{ $json.output.delivery_trend }}\n\nRisk Trend:\n{{ $json.output.risk_trend }}\n\nEngineering Health Trend:\n{{ $json.output.engineering_health_trend }}\n\nEmerging Concerns:\n{{ $json.output.emerging_concerns }}\n\nPositive Trends:\n{{ $json.output.positive_trends }}\n\nForecast 30 Days:\n{{ $json.output.forecast_30_days }}\n\nForecast 90 Days:\n{{ $json.output.forecast_90_days }}\n\nLeadership Recommendations:\n{{ $json.output.leadership_recommendations }}\n\nAreas Requiring Attention:\n{{ $json.output.areas_requiring_attention }}\n\nGenerate:\n\n1. Executive KPI Summary\n2. Engineering Health Status\n3. Delivery Status\n4. Risk Status\n5. Top Achievements\n6. Key Concerns\n7. Leadership Priorities\n8. Recommended Actions\n\nReturn JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        800,
+        272
+      ],
+      "id": "a47d4cd7-6e2c-43d3-b857-ac5500af5245",
+      "name": "Dashboard Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        864,
+        464
+      ],
+      "id": "09e3085c-1813-48ba-adca-4fbf3dc33acb",
+      "name": "Groq Chat Model8",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"executive_kpis\": {\n    \"productivity_trend\": \"\",\n    \"delivery_trend\": \"\",\n    \"risk_trend\": \"\",\n    \"engineering_health\": \"\"\n  },\n  \"engineering_health_status\": \"\",\n  \"delivery_status\": \"\",\n  \"risk_status\": \"\",\n  \"top_achievements\": [],\n  \"key_concerns\": [],\n  \"leadership_priorities\": [],\n  \"recommended_actions\": []\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        976,
+        480
+      ],
+      "id": "c0fff2ad-83fe-4fe0-b265-8deecbc40643",
+      "name": "Structured Output Parser8"
+    },
+    {
+      "parameters": {
+        "sendTo": "praveenpraveensimhadri@gmail.com ",
+        "subject": "📊 Daily Engineering Intelligence Report | Developer Productivity Analytics System",
+        "message": "=\n<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n<title>Engineering Intelligence Report</title>\n</head>\n<body style=\"margin:0;padding:0;background:#f4f7fc;font-family:Arial,Helvetica,sans-serif;\">\n\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f4f7fc;padding:30px;\">\n<tr>\n<td align=\"center\">\n\n<table width=\"800\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.1);\">\n\n<!-- Header -->\n<tr>\n<td style=\"background:linear-gradient(135deg,#1e3a8a,#2563eb);padding:35px;text-align:center;color:#ffffff;\">\n<h1 style=\"margin:0;font-size:32px;\">📊 Engineering Intelligence Report</h1>\n<p style=\"margin-top:10px;font-size:16px;opacity:0.9;\">\nDaily Productivity & Delivery Summary\n</p>\n<p style=\"margin-top:20px;font-size:14px;\">\nGenerated on: {{ $now }}\n</p>\n</td>\n</tr>\n\n<!-- Executive Summary -->\n<tr>\n<td style=\"padding:30px;\">\n<h2 style=\"color:#1e293b;margin-top:0;\">\n🚀 Executive Overview\n</h2>\n\n<p style=\"font-size:15px;color:#475569;line-height:1.8;\">\nThe engineering organization is currently operating in a healthy state with positive trends in productivity and delivery performance while overall engineering risks continue to decrease.\n</p>\n</td>\n</tr>\n\n<!-- KPI Cards -->\n<tr>\n<td style=\"padding:0 30px 30px 30px;\">\n\n<table width=\"100%\" cellpadding=\"12\">\n\n<tr>\n\n<td width=\"25%\">\n<div style=\"background:#eff6ff;border-radius:12px;padding:20px;text-align:center;\">\n<div style=\"font-size:28px;\">📈</div>\n<div style=\"color:#64748b;font-size:13px;\">Productivity Trend</div>\n<div style=\"font-size:18px;font-weight:bold;color:#1e40af;\">\n{{ $json.output.executive_kpis.productivity_trend }}\n</div>\n</div>\n</td>\n\n<td width=\"25%\">\n<div style=\"background:#ecfdf5;border-radius:12px;padding:20px;text-align:center;\">\n<div style=\"font-size:28px;\">🚀</div>\n<div style=\"color:#64748b;font-size:13px;\">Delivery Trend</div>\n<div style=\"font-size:18px;font-weight:bold;color:#166534;\">\n{{ $json.output.executive_kpis.delivery_trend }}\n</div>\n</div>\n</td>\n\n<td width=\"25%\">\n<div style=\"background:#fff7ed;border-radius:12px;padding:20px;text-align:center;\">\n<div style=\"font-size:28px;\">🛡️</div>\n<div style=\"color:#64748b;font-size:13px;\">Risk Trend</div>\n<div style=\"font-size:18px;font-weight:bold;color:#c2410c;\">\n{{ $json.output.executive_kpis.risk_trend }}\n</div>\n</div>\n</td>\n\n<td width=\"25%\">\n<div style=\"background:#f5f3ff;border-radius:12px;padding:20px;text-align:center;\">\n<div style=\"font-size:28px;\">❤️</div>\n<div style=\"color:#64748b;font-size:13px;\">Engineering Health</div>\n<div style=\"font-size:18px;font-weight:bold;color:#6d28d9;\">\n{{ $json.output.executive_kpis.engineering_health }}\n</div>\n</div>\n</td>\n\n</tr>\n</table>\n\n</td>\n</tr>\n\n<!-- Status Table -->\n<tr>\n<td style=\"padding:0 30px;\">\n<h2 style=\"color:#1e293b;\">📌 Operational Status</h2>\n\n<table width=\"100%\" cellpadding=\"14\" cellspacing=\"0\"\nstyle=\"border-collapse:collapse;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;\">\n\n<tr style=\"background:#f8fafc;\">\n<th align=\"left\">Category</th>\n<th align=\"left\">Status</th>\n</tr>\n\n<tr>\n<td style=\"border-top:1px solid #e2e8f0;\">Engineering Health</td>\n<td style=\"border-top:1px solid #e2e8f0;\">\n🟢 {{ $json.output.engineering_health_status }}\n</td>\n</tr>\n\n<tr>\n<td style=\"border-top:1px solid #e2e8f0;\">Delivery Status</td>\n<td style=\"border-top:1px solid #e2e8f0;\">\n🟢 {{ $json.output.delivery_status }}\n</td>\n</tr>\n\n<tr>\n<td style=\"border-top:1px solid #e2e8f0;\">Risk Status</td>\n<td style=\"border-top:1px solid #e2e8f0;\">\n🟢 {{ $json.output.risk_status }}\n</td>\n</tr>\n\n</table>\n</td>\n</tr>\n\n<!-- Achievements -->\n<tr>\n<td style=\"padding:30px;\">\n<h2 style=\"color:#16a34a;\">🏆 Top Achievements</h2>\n\n<div style=\"background:#f0fdf4;padding:20px;border-radius:12px;color:#166534;\">\n{{ $json.output.top_achievements }}\n</div>\n</td>\n</tr>\n\n<!-- Concerns -->\n<tr>\n<td style=\"padding:0 30px 30px 30px;\">\n<h2 style=\"color:#dc2626;\">⚠️ Areas of Concern</h2>\n\n<div style=\"background:#fef2f2;padding:20px;border-radius:12px;color:#991b1b;\">\n{{ $json.output.key_concerns }}\n</div>\n</td>\n</tr>\n\n<!-- Priorities -->\n<tr>\n<td style=\"padding:0 30px 30px 30px;\">\n<h2 style=\"color:#2563eb;\">🎯 Leadership Priorities</h2>\n\n<div style=\"background:#eff6ff;padding:20px;border-radius:12px;color:#1e3a8a;\">\n{{ $json.output.leadership_priorities }}\n</div>\n</td>\n</tr>\n\n<!-- Recommendations -->\n<tr>\n<td style=\"padding:0 30px 30px 30px;\">\n<h2 style=\"color:#7c3aed;\">✅ Recommended Actions</h2>\n\n<div style=\"background:#faf5ff;padding:20px;border-radius:12px;color:#6b21a8;\">\n{{ $json.output.recommended_actions }}\n</div>\n</td>\n</tr>\n\n<!-- Footer -->\n<tr>\n<td style=\"background:#0f172a;padding:25px;text-align:center;color:#cbd5e1;\">\n\n<div style=\"font-size:18px;font-weight:bold;\">\nAI Developer Productivity Analytics Platform\n</div>\n\n<div style=\"margin-top:8px;font-size:14px;\">\nDaily Engineering Intelligence Dashboard\n</div>\n\n<div style=\"margin-top:20px;font-size:12px;color:#94a3b8;\">\nThis report was automatically generated by the Engineering Intelligence Platform.\n</div>\n\n</td>\n</tr>\n\n</table>\n\n</td>\n</tr>\n</table>\n\n</body>\n</html>\n```\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        992,
+        16
+      ],
+      "id": "53b78733-7751-4d1a-bdb6-8f944e4dc33a",
+      "name": "Send a message",
+      "webhookId": "14c166a6-bfc2-4b58-b310-1bc27a98b625",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "VCmlqbkPlbuPFcrh",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get pull requests of a repository",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get pull requests of a repository": {
+      "main": [
+        [
+          {
+            "node": "Caluclate Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Caluclate Metrics": {
+      "main": [
+        [
+          {
+            "node": "PR Analytics Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "PR Analytics Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser2": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "PR Analytics Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PR Analytics Agent": {
+      "main": [
+        [
+          {
+            "node": "Developer Performance Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Developer Performance Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser3": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Developer Performance Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Developer Performance Agent": {
+      "main": [
+        [
+          {
+            "node": "Bottleneck Detection Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Bottleneck Detection Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Bottleneck Detection Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bottleneck Detection Agent": {
+      "main": [
+        [
+          {
+            "node": "Delivery Risk Prediction Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Delivery Risk Prediction Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Delivery Risk Prediction Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delivery Risk Prediction Agent": {
+      "main": [
+        [
+          {
+            "node": "Engineering Health Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Engineering Health Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser4": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Engineering Health Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Engineering Health Agent": {
+      "main": [
+        [
+          {
+            "node": "Recommendation Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Recommendation Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser5": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Recommendation Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recommendation Agent": {
+      "main": [
+        [
+          {
+            "node": "Executive Report Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model6": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Executive Report Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser6": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Executive Report Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Executive Report Agent": {
+      "main": [
+        [
+          {
+            "node": "Trend Analysis Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model7": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Trend Analysis Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser7": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Trend Analysis Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trend Analysis Agent": {
+      "main": [
+        [
+          {
+            "node": "Dashboard Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model8": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Dashboard Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser8": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Dashboard Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dashboard Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "73e3caa6-2865-4a83-a8a3-84bd79dbeda3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "55de7f674ab58be8b0c2e83bd116a8a2074ec94d79f4953c2a8575f410e1943d"
+  },
+  "id": "3L9HyGGUQl3uK7g7",
+  "tags": []
+}
