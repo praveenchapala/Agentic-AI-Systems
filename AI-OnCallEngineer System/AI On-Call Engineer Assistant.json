@@ -1,0 +1,1191 @@
+{
+  "name": "AI On-Call Engineer Assistant",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Incident Intake Form",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Incident ID"
+            },
+            {
+              "fieldLabel": "Incident Title"
+            },
+            {
+              "fieldLabel": "Service Name"
+            },
+            {
+              "fieldLabel": "Environment",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Production"
+                  },
+                  {
+                    "option": "Pre-Production"
+                  },
+                  {
+                    "option": "Staging"
+                  },
+                  {
+                    "option": "Development"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Severity",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Critical"
+                  },
+                  {
+                    "option": "High"
+                  },
+                  {
+                    "option": "Medium"
+                  },
+                  {
+                    "option": "Low"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Incident Description",
+              "fieldType": "textarea"
+            },
+            {
+              "fieldLabel": "Error Logs",
+              "fieldType": "textarea"
+            },
+            {
+              "fieldLabel": "CPU Usage",
+              "fieldType": "number"
+            },
+            {
+              "fieldLabel": "Memory Usage",
+              "fieldType": "number"
+            },
+            {
+              "fieldLabel": "Response Time",
+              "fieldType": "number"
+            },
+            {
+              "fieldLabel": "Recent Deployment?",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Yes"
+                  },
+                  {
+                    "option": "No"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Deployment Details",
+              "fieldType": "textarea"
+            },
+            {
+              "fieldLabel": "Number of Users Affected",
+              "fieldType": "number"
+            },
+            {
+              "fieldLabel": "Customer Impact",
+              "fieldType": "textarea"
+            },
+            {
+              "fieldLabel": "Revenue Impact",
+              "fieldType": "textarea"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        -656,
+        -64
+      ],
+      "id": "37fa4fa7-e169-4947-8e76-4d060ba93f26",
+      "name": "On form submission",
+      "webhookId": "71a9e8c0-ad29-4f9a-8026-56b2b2227f06"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an Incident Intake Specialist responsible for understanding newly reported production incidents.\n\nAnalyze the following incident.\n\nIncident ID:\n{{ $json['Incident ID'] }}\n\nIncident Title:\n{{ $json['Incident Title'] }}\n\nService Name:\n{{ $json['Service Name'] }}\n\nEnvironment:\n{{ $json['Environment'] }}\n\nSeverity:\n{{ $json['Severity'] }}\n\nIncident Description:\n{{ $json['Incident Description'] }}\n\nNumber of Users Affected:\n{{ $json['Number of Users Affected'] }}\n\nCustomer Impact:\n{{ $json['Customer Impact'] }}\n\nRevenue Impact:\n{{ $json['Revenue Impact'] }}\n\nDetermine:\n\n1. Incident Category\n2. Incident Type\n3. Affected Service\n4. Environment\n5. Business Criticality\n6. Customer Impact Level\n7. Revenue Impact Level\n8. Initial Investigation Priority\n9. Recommended Teams to Involve\n10. Executive Summary\n\nReturn JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -624,
+        32
+      ],
+      "id": "d9353ac0-65aa-4b1a-b3a1-ee2c36a977dd",
+      "name": "Incident Intake Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -592,
+        224
+      ],
+      "id": "cb917c20-ba1e-41a4-bf0c-86131e7ee57a",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"incident_category\": \"\",\n  \"incident_type\": \"\",\n  \"affected_service\": \"\",\n  \"environment\": \"\",\n  \"business_criticality\": \"\",\n  \"customer_impact_level\": \"\",\n  \"revenue_impact_level\": \"\",\n  \"initial_investigation_priority\": \"\",\n  \"recommended_teams\": [],\n  \"executive_summary\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -448,
+        192
+      ],
+      "id": "364cb37f-85e4-4657-b669-9bd519c9864b",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an Incident Classification Specialist responsible for categorizing production incidents and determining the appropriate investigation path.\n\nAnalyze the following incident information.\n\nIncident Category:\n{{ $json.output.incident_category }}\n\nIncident Type:\n{{ $json.output.incident_type }}\n\nAffected Service:\n{{ $json.output.affected_service }}\n\nEnvironment:\n{{ $json.output.environment }}\n\nBusiness Criticality:\n{{ $json.output.business_criticality }}\n\nCustomer Impact Level:\n{{ $json.output.customer_impact_level }}\n\nRevenue Impact Level:\n{{ $json.output.revenue_impact_level }}\n\nInitial Investigation Priority:\n{{ $json.output.initial_investigation_priority }}\n\nRecommended Teams:\n{{ $json.output.recommended_teams }}\n\nExecutive Summary:\n{{ $json.output.executive_summary }}\n\nDetermine:\n\n1. Root Incident Domain\n2. Incident Severity\n3. Business Priority\n4. Escalation Level\n5. Primary Incident Owner\n6. Required Stakeholders\n7. SLA Target\n8. Investigation Path\n9. Recommended Diagnostic Areas\n10. Incident Classification Summary\n\nReturn JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -608,
+        352
+      ],
+      "id": "60cda35c-9979-479f-9160-a03fb261a97a",
+      "name": "Incident Classification Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        512
+      ],
+      "id": "a5bc48eb-5a50-48cd-9047-fa352e0416c5",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"incident_domain\": \"\",\n  \"incident_severity\": \"\",\n  \"business_priority\": \"\",\n  \"escalation_level\": \"\",\n  \"primary_incident_owner\": \"\",\n  \"required_stakeholders\": [],\n  \"sla_target\": \"\",\n  \"investigation_path\": [],\n  \"recommended_diagnostic_areas\": [],\n  \"incident_classification_summary\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -480,
+        512
+      ],
+      "id": "0aaeff20-1a55-4e67-bbd2-ad1f23bec8b6",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Incident Manager responsible for determining the severity and business impact of production incidents.\n\nAnalyze the following information.\n\nIncident Domain:\n{{ $json.output.incident_domain }}\n\nIncident Severity:\n{{ $json.output.incident_severity }}\n\nBusiness Priority:\n{{ $json.output.business_priority }}\n\nEscalation Level:\n{{ $json.output.escalation_level }}\n\nPrimary Incident Owner:\n{{ $json.output.primary_incident_owner }}\n\nRequired Stakeholders:\n{{ $json.output.required_stakeholders }}\n\nSLA Target:\n{{ $json.output.sla_target }}\n\nInvestigation Path:\n{{ $json.output.investigation_path }}\n\nRecommended Diagnostic Areas:\n{{ $json.output.recommended_diagnostic_areas }}\n\nIncident Classification Summary:\n{{ $json.output.incident_classification_summary }}\n\nDetermine:\n\n1. Final Severity Level\n2. Business Impact Score (1-100)\n3. Customer Impact Score (1-100)\n4. Revenue Impact Score (1-100)\n5. Escalation Requirement\n6. Executive Notification Required\n7. Recommended Response Team\n8. Recovery Urgency\n9. Incident Command Level\n10. Severity Assessment Summary\n\nReturn JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -448,
+        -80
+      ],
+      "id": "8212e31d-8b00-40d1-9804-63ea3eb6ddb0",
+      "name": "Severity Assessment Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -336,
+        112
+      ],
+      "id": "1343e94d-48a5-4cdc-bee5-bbbab37a3a74",
+      "name": "Groq Chat Model2",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"final_severity_level\": \"\",\n  \"business_impact_score\": \"\",\n  \"customer_impact_score\": \"\",\n  \"revenue_impact_score\": \"\",\n  \"escalation_requirement\": \"\",\n  \"executive_notification_required\": \"\",\n  \"recommended_response_team\": [],\n  \"recovery_urgency\": \"\",\n  \"incident_command_level\": \"\",\n  \"severity_assessment_summary\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -208,
+        64
+      ],
+      "id": "c4193020-b11c-477b-a2e7-80a821a7783b",
+      "name": "Structured Output Parser2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Site Reliability Engineer (SRE) responsible for investigating production incidents through application logs.\n\nAnalyze the following incident information.\n\nIncident:\n{{ $('Incident Intake Agent').item.json.output.executive_summary }}\n\nFinal Severity:\n{{ $('Severity Assessment Agent').item.json.output.final_severity_level }}\n\nError Logs:\n{{ $('On form submission').item.json['Error Logs'] }}\n\nDetermine:\n\n1. Detected Errors\n2. Primary Error\n3. Error Category\n4. Suspected Root Cause\n5. Confidence Score (0-100)\n6. Affected Components\n7. Recommended Log Files to Investigate\n8. Immediate Investigation Steps\n9. Potential Risks\n10. Log Analysis Summary\n\nReturn JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -320,
+        240
+      ],
+      "id": "394c0a41-88b5-4214-ae6f-3443c32f6b8e",
+      "name": "Log Analysis Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        400
+      ],
+      "id": "f73c079b-a55e-4da7-b6b7-0263a38193b2",
+      "name": "Groq Chat Model3",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"detected_errors\": [],\n  \"primary_error\": \"\",\n  \"error_category\": \"\",\n  \"suspected_root_cause\": \"\",\n  \"confidence_score\": \"\",\n  \"affected_components\": [],\n  \"recommended_log_files\": [],\n  \"immediate_investigation_steps\": [],\n  \"potential_risks\": [],\n  \"log_analysis_summary\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -144,
+        400
+      ],
+      "id": "b7709339-f34f-4fc7-b89f-c5511583ad66",
+      "name": "Structured Output Parser3"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Site Reliability Engineer (SRE) responsible for analyzing production metrics during incidents.\n\nAnalyze the following incident metrics.\n\nCPU Usage:\n{{ $('On form submission').item.json['CPU Usage'] }}%\n\nMemory Usage:\n{{ $('On form submission').item.json['Memory Usage'] }}%\n\nResponse Time:\n{{ $('On form submission').item.json['Response Time'] }} ms\n\nPrimary Error:\n{{ $('Log Analysis Agent').item.json.output.primary_error }}\n\nSuspected Root Cause:\n{{ $('Log Analysis Agent').item.json.output.suspected_root_cause }}\n\nDetermine:\n\n1. CPU Health\n2. Memory Health\n3. Response Time Health\n4. System Health Status\n5. Abnormal Metrics\n6. Infrastructure Risk Level\n7. Performance Bottlenecks\n8. Metric-Based Findings\n9. Recommended Investigations\n10. Metrics Analysis Summary\n\nReturn JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -128,
+        -96
+      ],
+      "id": "a68cfe0a-9fdf-4617-8e85-5c08342315d1",
+      "name": "Metrics Analysis Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        112
+      ],
+      "id": "aa5323cb-e9ae-48e9-a667-10a8ff27f00e",
+      "name": "Groq Chat Model4",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"cpu_health\": \"\",\n  \"memory_health\": \"\",\n  \"response_time_health\": \"\",\n  \"system_health_status\": \"\",\n  \"abnormal_metrics\": [],\n  \"infrastructure_risk_level\": \"\",\n  \"performance_bottlenecks\": [],\n  \"metric_based_findings\": [],\n  \"recommended_investigations\": [],\n  \"metrics_analysis_summary\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        32,
+        80
+      ],
+      "id": "3c955699-ca58-4675-99af-0598b2c30ce7",
+      "name": "Structured Output Parser4"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior DevOps Engineer responsible for determining whether a recent deployment caused the production incident.\n\nAnalyze the following information.\n\nRecent Deployment:\n{{ $('On form submission').item.json['Recent Deployment?'] }}\n\nDeployment Details:\n{{ $('On form submission').item.json['Deployment Details'] }}\n\nPrimary Error:\n{{ $('Log Analysis Agent').item.json.output.primary_error }}\n\nSuspected Root Cause:\n{{ $('Log Analysis Agent').item.json.output.suspected_root_cause }}\n\nSystem Health:\n{{ $('Metrics Analysis Agent').item.json.output.system_health_status }}\n\nPerformance Bottlenecks:\n{{ $('Metrics Analysis Agent').item.json.output.performance_bottlenecks }}\n\nMetric Findings:\n{{ $('Metrics Analysis Agent').item.json.output.metric_based_findings }}\n\nDetermine:\n\n1. Deployment Related Incident\n2. Deployment Risk Level\n3. Deployment Confidence Score (0-100)\n4. Potential Deployment Issues\n5. Changed Components\n6. Rollback Recommendation\n7. Immediate Actions\n8. Deployment Investigation Summary\n\nReturn JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -16,
+        240
+      ],
+      "id": "a47c3ff5-67e4-43fb-86e3-6e960b01cca4",
+      "name": "Deployment Analysis Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        0,
+        400
+      ],
+      "id": "1ee9f1d1-1f00-462e-be3f-700cf07deb87",
+      "name": "Groq Chat Model5",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"deployment_related_incident\": \"\",\n  \"deployment_risk_level\": \"\",\n  \"deployment_confidence_score\": \"\",\n  \"potential_deployment_issues\": [],\n  \"changed_components\": [],\n  \"rollback_recommendation\": \"\",\n  \"immediate_actions\": [],\n  \"deployment_investigation_summary\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        128,
+        368
+      ],
+      "id": "ec997f43-dacc-4d78-9659-5f9ebe6cb303",
+      "name": "Structured Output Parser5"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cb6ce438-3b05-4c77-954f-08b474eeb332",
+              "name": "historical_incidents",
+              "value": "[   {     \"incident_id\": \"INC-154\",     \"incident_title\": \"Payment Service Database Connection Failure\",     \"root_cause\": \"Database connection pool exhausted\",     \"resolution\": \"Restarted service and increased pool size\",     \"recovery_time\": \"20 minutes\"   },   {     \"incident_id\": \"INC-141\",     \"incident_title\": \"Database Configuration Failure After Deployment\",     \"root_cause\": \"Incorrect database configuration\",     \"resolution\": \"Rollback deployment\",     \"recovery_time\": \"15 minutes\"   },   {     \"incident_id\": \"INC-127\",     \"incident_title\": \"Payment API Timeout\",     \"root_cause\": \"Connection pool exhaustion\",     \"resolution\": \"Restarted database connections\",     \"recovery_time\": \"18 minutes\"   } ]",
+              "type": "array"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        160,
+        48
+      ],
+      "id": "82c016fd-6a20-4cf5-a022-21c4a8368c58",
+      "name": "Historical Incident Database"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Incident Knowledge Engineer responsible for identifying similar historical incidents and recommending proven resolutions.\n\nAnalyze the following information.\n\nCurrent Incident Summary:\n{{ $('Deployment Analysis Agent').item.json.output.deployment_investigation_summary }}\n\nPrimary Error:\n{{ $('Log Analysis Agent').item.json.output.primary_error }}\n\nSuspected Root Cause:\n{{ $('Log Analysis Agent').item.json.output.suspected_root_cause }}\n\nHistorical Incidents:\n{{ JSON.stringify($json.historical_incidents) }}\n\nDetermine:\n\n1. Similar Incidents Found\n2. Most Similar Incident\n3. Similarity Score (0-100)\n4. Previous Root Causes\n5. Previous Resolutions\n6. Recommended Historical Resolution\n7. Estimated Recovery Time\n8. Knowledge-Based Recommendations\n9. Confidence Level\n10. Historical Incident Summary\n\nReturn JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        192,
+        -96
+      ],
+      "id": "1ed2aa26-77da-467e-ba27-7ff0f5e07972",
+      "name": "Historical Incident Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        336,
+        80
+      ],
+      "id": "db89dc0e-e8a9-4bca-ab73-ed5dc58802c0",
+      "name": "Groq Chat Model6",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"similar_incidents_found\": [],\n  \"most_similar_incident\": \"\",\n  \"similarity_score\": \"\",\n  \"previous_root_causes\": [],\n  \"previous_resolutions\": [],\n  \"recommended_historical_resolution\": \"\",\n  \"estimated_recovery_time\": \"\",\n  \"knowledge_based_recommendations\": [],\n  \"confidence_level\": \"\",\n  \"historical_incident_summary\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        448,
+        48
+      ],
+      "id": "64fb0898-7cf7-49cb-8484-e2e4ec1e71fd",
+      "name": "Structured Output Parser6"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Principal Site Reliability Engineer (SRE) and Incident Commander.\n\nYour job is to determine the most probable root cause of the production incident by analyzing all available evidence.\n\nIncident Summary:\n{{ $('Incident Intake Agent').item.json.output.executive_summary }}\n\nSeverity Assessment:\n{{ $('Severity Assessment Agent').item.json.output.severity_assessment_summary }}\n\nLog Analysis:\n{{ $('Log Analysis Agent').item.json.output.log_analysis_summary }}\n\nMetrics Analysis:\n{{ $('Metrics Analysis Agent').item.json.output.metrics_analysis_summary }}\n\nDeployment Investigation:\n{{ $('Deployment Analysis Agent').item.json.output.deployment_investigation_summary }}\n\nHistorical Incident Summary:\n{{ $('Historical Incident Agent').item.json.output.historical_incident_summary }}\n\nKnowledge Recommendations:\n{{ $('Historical Incident Agent').item.json.output.knowledge_based_recommendations }}\n\nDetermine:\n\n1. Final Root Cause\n2. Root Cause Category\n3. Root Cause Confidence Score (0-100)\n4. Evidence Supporting the Root Cause\n5. Contributing Factors\n6. Affected Components\n7. Business Impact\n8. Recommended Immediate Fix\n9. Recommended Long-Term Fix\n10. Estimated Recovery Time\n11. Final RCA Summary\n\nReturn JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        320,
+        208
+      ],
+      "id": "e992e250-0574-46de-92e4-21d5c981b7f4",
+      "name": "Root Cause Analysis (RCA) Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        304,
+        352
+      ],
+      "id": "7bd01803-a937-43af-8ce3-8046767249d4",
+      "name": "Groq Chat Model7",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"final_root_cause\": \"\",\n  \"root_cause_category\": \"\",\n  \"root_cause_confidence_score\": \"\",\n  \"supporting_evidence\": [],\n  \"contributing_factors\": [],\n  \"affected_components\": [],\n  \"business_impact\": \"\",\n  \"recommended_immediate_fix\": [],\n  \"recommended_long_term_fix\": [],\n  \"estimated_recovery_time\": \"\",\n  \"final_rca_summary\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        480,
+        352
+      ],
+      "id": "30626f37-8e40-4829-830c-fb97dce0b25d",
+      "name": "Structured Output Parser7"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Business Impact Assessment Specialist responsible for determining the business consequences of production incidents.\n\nAnalyze the following information.\n\nRoot Cause:\n{{ $('Root Cause Analysis (RCA) Agent').item.json.output.final_root_cause }}\n\nBusiness Impact:\n{{ $('Root Cause Analysis (RCA) Agent').item.json.output.business_impact }}\n\nAffected Components:\n{{ JSON.stringify($('Root Cause Analysis (RCA) Agent').item.json.output.affected_components) }}\n\nNumber of Users Affected:\n{{ $('On form submission').item.json['Number of Users Affected'] }}\n\nCustomer Impact:\n{{ $('On form submission').item.json['Customer Impact'] }}\n\nRevenue Impact:\n{{ $('On form submission').item.json['Revenue Impact'] }}\n\nDetermine:\n\n1. Incident Impact Level\n2. Customer Severity\n3. Revenue Severity\n4. Operational Severity\n5. Business Risk Score (0-100)\n6. Financial Loss Estimate\n7. Reputation Risk\n8. Executive Attention Required\n9. Recommended Business Actions\n10. Impact Assessment Summary\n\nConsider:\n- More than 1000 affected users indicates High Customer Impact.\n- Revenue loss above $100,000/hour indicates Critical Revenue Impact.\n- Production incidents affecting payments are business-critical.\n- Customer-facing outages have high reputational risk.\n\nReturn JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        496,
+        -96
+      ],
+      "id": "61382d0d-b92d-4611-87cb-bdf1dc4436bc",
+      "name": "Impact Assessment Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        544,
+        80
+      ],
+      "id": "5cb1e384-c92a-43fa-8c61-b42b43f094c8",
+      "name": "Groq Chat Model8",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"incident_impact_level\": \"\",\n  \"customer_severity\": \"\",\n  \"revenue_severity\": \"\",\n  \"operational_severity\": \"\",\n  \"business_risk_score\": \"\",\n  \"financial_loss_estimate\": \"\",\n  \"reputation_risk\": \"\",\n  \"executive_attention_required\": \"\",\n  \"recommended_business_actions\": [],\n  \"impact_assessment_summary\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        640,
+        48
+      ],
+      "id": "dfddce5e-9131-4ffd-bc81-c625c704972b",
+      "name": "Structured Output Parser8"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Principal Site Reliability Engineer (SRE) responsible for creating an incident recovery plan.\n\nAnalyze the following information.\n\nRoot Cause:\n{{ $('Root Cause Analysis (RCA) Agent').item.json.output.final_root_cause }}\n\nImpact Assessment:\n{{ $('Impact Assessment Agent').item.json.output.impact_assessment_summary }}\n\nImmediate Fixes:\n{{ JSON.stringify($('Root Cause Analysis (RCA) Agent').item.json.output.recommended_immediate_fix) }}\n\nLong-Term Fixes:\n{{ JSON.stringify($('Root Cause Analysis (RCA) Agent').item.json.output.recommended_long_term_fix) }}\n\nRecommended Business Actions:\n{{ JSON.stringify($('Impact Assessment Agent').item.json.output.recommended_business_actions) }}\n\nDetermine:\n\n1. Recovery Strategy\n2. Recovery Priority\n3. Immediate Recovery Steps\n4. Rollback Required\n5. Service Restart Required\n6. Estimated Recovery Time\n7. Recovery Risks\n8. Long-Term Prevention Actions\n9. Success Criteria\n10. Recovery Summary\n\nReturn JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        608,
+        176
+      ],
+      "id": "389e328d-315d-4263-bce2-44409853d258",
+      "name": "Recovery Recommendation Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        640,
+        352
+      ],
+      "id": "d1e3249a-66b9-4d11-8925-9abca515d1b8",
+      "name": "Groq Chat Model9",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"recovery_strategy\": \"\",\n  \"recovery_priority\": \"\",\n  \"immediate_recovery_steps\": [],\n  \"rollback_required\": \"\",\n  \"service_restart_required\": \"\",\n  \"estimated_recovery_time\": \"\",\n  \"recovery_risks\": [],\n  \"long_term_prevention_actions\": [],\n  \"success_criteria\": [],\n  \"recovery_summary\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        752,
+        320
+      ],
+      "id": "2c85a732-085b-4386-a027-ac7431adb1ce",
+      "name": "Structured Output Parser9"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an Incident Communications Manager responsible for generating stakeholder communications during a production incident.\n\nAnalyze the following information.\n\nIncident Summary:\n{{ $('Incident Intake Agent').item.json.output.executive_summary }}\n\nRoot Cause:\n{{ $('Root Cause Analysis (RCA) Agent').item.json.output.final_root_cause }}\n\nImpact Assessment:\n{{ $('Impact Assessment Agent').item.json.output.impact_assessment_summary }}\n\nRecovery Summary:\n{{ $('Recovery Recommendation Agent').item.json.output.recovery_summary }}\n\nEstimated Recovery Time:\n{{ $('Recovery Recommendation Agent').item.json.output.estimated_recovery_time }}\n\nGenerate:\n\n1. Engineering Update\n2. Executive Update\n3. Customer Support Update\n4. Customer Communication\n5. Incident Timeline\n6. Current Status\n7. ETA\n8. Next Update Time\n9. Recommended Communication Actions\n10. Communication Summary\n\nReturn JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        800,
+        -96
+      ],
+      "id": "b2750a9c-b422-4b22-9706-254b1d7bef10",
+      "name": "Communication Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        816,
+        64
+      ],
+      "id": "01dc3f78-7aeb-4aa2-9a9d-942c2d305c63",
+      "name": "Groq Chat Model10",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"engineering_update\": \"\",\n  \"executive_update\": \"\",\n  \"customer_support_update\": \"\",\n  \"customer_communication\": \"\",\n  \"incident_timeline\": [],\n  \"current_status\": \"\",\n  \"eta\": \"\",\n  \"next_update_time\": \"\",\n  \"recommended_communication_actions\": [],\n  \"communication_summary\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        944,
+        32
+      ],
+      "id": "f9384c23-5ffd-426d-898f-14a47bfdd816",
+      "name": "Structured Output Parser10"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        0,
+        560
+      ],
+      "id": "08bd548b-c218-4212-aa44-c3836ed52c64",
+      "name": "Groq Chat Model11",
+      "credentials": {
+        "groqApi": {
+          "id": "npYrw9qld7jIsaag",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"executive_incident_summary\": \"\",\n  \"business_impact_statement\": \"\",\n  \"root_cause_statement\": \"\",\n  \"recovery_status\": \"\",\n  \"current_risk_level\": \"\",\n  \"leadership_recommendations\": [],\n  \"lessons_learned\": [],\n  \"preventive_actions\": [],\n  \"executive_decision\": \"\",\n  \"final_report_conclusion\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        704,
+        560
+      ],
+      "id": "8186bb73-e3b2-47fa-9b0f-6ff7629f622d",
+      "name": "Structured Output Parser11"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Chief Technology Officer (CTO) preparing the final executive incident report for leadership.\n\nAnalyze the following information.\n\nIncident Summary:\n{{ $('Incident Intake Agent').item.json.output.executive_summary }}\n\nRoot Cause:\n{{ $('Root Cause Analysis (RCA) Agent').item.json.output.final_rca_summary }}\n\nImpact Assessment:\n{{ $('Impact Assessment Agent').item.json.output.impact_assessment_summary }}\n\nRecovery Summary:\n{{ $('Recovery Recommendation Agent').item.json.output.recovery_summary }}\n\nCommunication Summary:\n{{ $('Communication Agent').item.json.output.communication_summary }}\n\nGenerate:\n\n1. Executive Incident Summary\n2. Business Impact Statement\n3. Root Cause Statement\n4. Recovery Status\n5. Current Risk Level\n6. Leadership Recommendations\n7. Lessons Learned\n8. Preventive Actions\n9. Executive Decision\n10. Final Report Conclusion\n\nReturn JSON only.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        304,
+        480
+      ],
+      "id": "85943419-0db2-4e08-8e44-bfaccb8fae32",
+      "name": "Executive Summary Agent"
+    },
+    {
+      "parameters": {
+        "sendTo": "praveenpraveensimhadri@gmail.com ",
+        "subject": "🚨 SEV-1 Incident Report | Payment Service Outage | Recovery In Progress",
+        "message": "=<!DOCTYPE html> <html> <head> <meta charset=\"UTF-8\"> <title>Incident Report</title> </head>  <body style=\"margin:0;padding:0;background:#f4f7fc;font-family:Arial,Helvetica,sans-serif;\">  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"padding:30px;background:#f4f7fc;\"> <tr> <td align=\"center\">  <table width=\"850\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0px 6px 20px rgba(0,0,0,0.12);\">  <!-- Header --> <tr> <td style=\"background:#dc2626;padding:35px;text-align:center;color:white;\">  <h1 style=\"margin:0;font-size:32px;\"> 🚨 Critical Production Incident </h1>  <p style=\"margin-top:15px;font-size:18px;\"> Payment Service Outage </p>  <p style=\"font-size:14px;opacity:0.9;\"> Generated on {{ $now }} </p>  </td> </tr>  <!-- Incident Summary --> <tr> <td style=\"padding:30px;\">  <h2 style=\"color:#1e293b;\"> 📋 Executive Incident Summary </h2>  <p style=\"font-size:15px;line-height:1.8;color:#475569;\"> {{ $json.output.executive_incident_summary }} </p>  </td> </tr>  <!-- Incident Status Cards --> <tr> <td style=\"padding:0 30px 30px 30px;\">  <table width=\"100%\" cellpadding=\"12\"> <tr>  <td width=\"33%\"> <div style=\"background:#fef2f2;border-radius:12px;padding:20px;text-align:center;\"> <div style=\"font-size:30px;\">🚨</div> <div style=\"font-size:13px;color:#64748b;\">Risk Level</div> <div style=\"font-size:20px;font-weight:bold;color:#dc2626;\"> {{ $json.output.current_risk_level }} </div> </div> </td>  <td width=\"33%\"> <div style=\"background:#eff6ff;border-radius:12px;padding:20px;text-align:center;\"> <div style=\"font-size:30px;\">🔧</div> <div style=\"font-size:13px;color:#64748b;\">Recovery Status</div> <div style=\"font-size:20px;font-weight:bold;color:#2563eb;\"> {{ $json.output.recovery_status }} </div> </div> </td>  <td width=\"33%\"> <div style=\"background:#fff7ed;border-radius:12px;padding:20px;text-align:center;\"> <div style=\"font-size:30px;\">⏳</div> <div style=\"font-size:13px;color:#64748b;\">ETA</div> <div style=\"font-size:20px;font-weight:bold;color:#ea580c;\"> {{ $('Communication Agent').item.json.output.eta }} </div> </div> </td>  </tr> </table>  </td> </tr>  <!-- Business Impact --> <tr> <td style=\"padding:0 30px 30px 30px;\">  <h2 style=\"color:#1e293b;\"> 💼 Business Impact </h2>  <div style=\"background:#fff7ed;padding:20px;border-radius:12px;color:#9a3412;line-height:1.8;\"> {{ $json.output.business_impact_statement }} </div>  </td> </tr>  <!-- Root Cause --> <tr> <td style=\"padding:0 30px 30px 30px;\">  <h2 style=\"color:#1e293b;\"> 🔍 Root Cause Analysis </h2>  <div style=\"background:#eff6ff;padding:20px;border-radius:12px;color:#1e40af;line-height:1.8;\"> {{ $json.output.root_cause_statement }} </div>  </td> </tr>  <!-- Leadership Recommendations --> <tr> <td style=\"padding:0 30px 30px 30px;\">  <h2 style=\"color:#1e293b;\"> 🎯 Leadership Recommendations </h2>  <div style=\"background:#f8fafc;padding:20px;border-radius:12px;line-height:1.8;\"> {{ $json.output.leadership_recommendations }} </div>  </td> </tr>  <!-- Lessons Learned --> <tr> <td style=\"padding:0 30px 30px 30px;\">  <h2 style=\"color:#1e293b;\"> 📚 Lessons Learned </h2>  <div style=\"background:#ecfdf5;padding:20px;border-radius:12px;color:#166534;line-height:1.8;\"> {{ $json.output.lessons_learned }} </div>  </td> </tr>  <!-- Preventive Actions --> <tr> <td style=\"padding:0 30px 30px 30px;\">  <h2 style=\"color:#1e293b;\"> 🛡️ Preventive Actions </h2>  <div style=\"background:#f5f3ff;padding:20px;border-radius:12px;color:#6d28d9;line-height:1.8;\"> {{ $json.output.preventive_actions }} </div>  </td> </tr>  <!-- Executive Decision --> <tr> <td style=\"padding:0 30px 30px 30px;\">  <h2 style=\"color:#1e293b;\"> ⚖️ Executive Decision </h2>  <div style=\"background:#f8fafc;padding:20px;border-left:5px solid #2563eb;border-radius:10px;line-height:1.8;\"> {{ $json.output.executive_decision }} </div>  </td> </tr>  <!-- Footer --> <tr> <td style=\"background:#0f172a;padding:30px;text-align:center;color:#cbd5e1;\">  <div style=\"font-size:20px;font-weight:bold;\"> AI On-Call Engineer Assistant </div>  <div style=\"margin-top:8px;font-size:15px;\"> Automated Incident Intelligence Report </div>  <div style=\"margin-top:20px;font-size:12px;color:#94a3b8;\"> This report was automatically generated by the AI Incident Commander Platform. </div>  </td> </tr>  </table>  </td> </tr> </table>  </body> </html> ```",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        592,
+        480
+      ],
+      "id": "339e2725-5d5d-4a0b-989e-09945a165fb9",
+      "name": "Send a message",
+      "webhookId": "cb0e9ee8-eb61-41d4-b448-369b4665e81d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "VCmlqbkPlbuPFcrh",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Incident Intake Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Incident Intake Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Incident Intake Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Incident Intake Agent": {
+      "main": [
+        [
+          {
+            "node": "Incident Classification Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Incident Classification Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Incident Classification Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Incident Classification Agent": {
+      "main": [
+        [
+          {
+            "node": "Severity Assessment Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Severity Assessment Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser2": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Severity Assessment Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Severity Assessment Agent": {
+      "main": [
+        [
+          {
+            "node": "Log Analysis Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Log Analysis Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser3": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Log Analysis Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Analysis Agent": {
+      "main": [
+        [
+          {
+            "node": "Metrics Analysis Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Metrics Analysis Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser4": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Metrics Analysis Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Metrics Analysis Agent": {
+      "main": [
+        [
+          {
+            "node": "Deployment Analysis Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Deployment Analysis Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser5": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Deployment Analysis Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deployment Analysis Agent": {
+      "main": [
+        [
+          {
+            "node": "Historical Incident Database",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Historical Incident Database": {
+      "main": [
+        [
+          {
+            "node": "Historical Incident Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model6": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Historical Incident Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser6": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Historical Incident Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Historical Incident Agent": {
+      "main": [
+        [
+          {
+            "node": "Root Cause Analysis (RCA) Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model7": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Root Cause Analysis (RCA) Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser7": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Root Cause Analysis (RCA) Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Root Cause Analysis (RCA) Agent": {
+      "main": [
+        [
+          {
+            "node": "Impact Assessment Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model8": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Impact Assessment Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser8": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Impact Assessment Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Impact Assessment Agent": {
+      "main": [
+        [
+          {
+            "node": "Recovery Recommendation Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model9": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Recovery Recommendation Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser9": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Recovery Recommendation Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recovery Recommendation Agent": {
+      "main": [
+        [
+          {
+            "node": "Communication Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model10": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Communication Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser10": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Communication Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Communication Agent": {
+      "main": [
+        [
+          {
+            "node": "Executive Summary Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model11": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Executive Summary Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser11": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Executive Summary Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Executive Summary Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9ac7a879-cb3c-4cac-9da8-13b8da14c186",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "55de7f674ab58be8b0c2e83bd116a8a2074ec94d79f4953c2a8575f410e1943d"
+  },
+  "id": "s3eamlEHbydGTjw3",
+  "tags": []
+}
